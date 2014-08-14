@@ -401,19 +401,22 @@ classdef VoronoiFortuneAlgo < handle
             if index~=0
                 dist = [];
                 for ii = 1 : size(VFA.edge_list{index, 2}, 1)
-                    points = [VFA.edge_list{index,2}(ii,1).start_p; ...
-                            VFA.edge_list{index,2}(ii,1).end_p ];
-                    
-                    
-                    for jj  = 1: length(points)
-                        distance = VFA.distance(p, points(jj));
-                        if distance>max_radius
-                            distance = max_radius;
-                        end
-
-                        dist = [dist; distance];
+                   
+                    point = VFA.edge_list{index,2}(ii,1).end_p;
+                    if point.x<xmin || point.x>xmax ...
+                        || point.y<ymin || point.y>ymax
+                        
+                        continue;
                     end
-                                        
+                    
+                    distance = VFA.distance(p, ...
+                        VFA.edge_list{index,2}(ii,1).end_p);
+                                          
+                    if distance>max_radius
+                        distance = max_radius;
+                    end
+
+                    dist = [dist; distance];                                        
                 end
 
                 if way==1 % max value

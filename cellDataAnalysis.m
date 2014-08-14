@@ -32,9 +32,10 @@ end
 figure; % plot the cell geo location
 hold on;
 
-radius_section = [0, 500, 1000, 2000, 4000, 6000, 8000];
-colors = {'b^', 'g^', 'r^', 'b*', 'g*', 'r*', 'b+'};
-legend_string = {'500', '1000', '2000', '4000', '6000', '8000', '>8000'};
+radius_section = [0, 500, 1000, 2000, 4000, 6000, 8000, 10000];
+colors = {'b^', 'g^', 'r^', 'b*', 'g*', 'r*', 'b+', 'g+'};
+legend_string = {'500', '1000', '2000', '4000', '6000', '8000', ...
+    '10000', '> 10000'};
 legend_h = zeros(1,length(legend_string));
 
 % plot(cell_lat_long(:, 1), cell_lat_long(:, 2), '^');
@@ -53,11 +54,13 @@ for ii = 1:length(cell_lat_long)
 end
 
 legend(legend_h, legend_string);
+title('cell geo-location');
 
 figure; % radius scatter dia
 % plot the real_radius
 plot(real_radius, '*');
 grid on;
+title('radius scatter');
 
 figure; % radius bar dia
 % 500, 1000, 2000, 4000, 6000, 8000, 10000, 12000
@@ -70,6 +73,7 @@ for ii = 1 : length(N)
 end
 set(gca, 'xtick', [1 : length(nbins)]);
 set(gca, 'xticklabel', x_lable);
+title('radius distribution');
 
 figure;  % radius dia by cell type
 hold on;
@@ -93,7 +97,7 @@ end
 xlim([0, OTHER+10]);
 set(gca, 'xtick', [MACRO, MICRO, OTHER]);
 set(gca, 'xticklabel', {'MACRO', 'MICRO', 'OTHER'});
-
+title('radius vs cell type');
 
 figure; % radius dia by freq
 hold on;
@@ -124,6 +128,7 @@ end
 xlim([0, OTHER+10]);
 set(gca, 'xtick', [GSM800, GSM900, GSM1800, GSM1900, OTHER]);
 set(gca, 'xticklabel', {'GSM800', 'GSM900', 'GSM1800', 'GSM1900', 'OTHER'});
+title('radius vs frequence');
 
 figure; % radius dia by power
 cell_power = [];
@@ -132,6 +137,7 @@ for ii = 1 : length(cell_data)
 end
 plot(cell_power, real_radius, '*');
 xlim([min(cell_power)-5, max(cell_power)+5]);
+title('radius vs power');
 
 figure; % radius dia by freq & power
 hold on;
@@ -157,3 +163,4 @@ end
 xlim([0, OTHER+10]);
 set(gca, 'xtick', [GSM800, GSM900, GSM1800, GSM1900, OTHER]);
 set(gca, 'xticklabel', {'GSM800', 'GSM900', 'GSM1800', 'GSM1900', 'OTHER'});
+title('radius vs frequence vs power');
