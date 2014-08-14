@@ -25,17 +25,34 @@ for ii=1:length(cell_data)
     real_radius(ii) = cell_data{ii, REAL_RADIUS};
 end
 
-% plot the cell geo location
-figure;
-plot(cell_lat_long(:, 1), cell_lat_long(:, 2), '^');
+% % plot the cell geo location
+% figure;
+% plot(cell_lat_long(:, 1), cell_lat_long(:, 2), '^');
+
+figure; % plot the cell geo location
+hold on;
+
+radius_section = [0, 500, 1000, 2000, 4000, 6000, 8000];
+colors = {'b^', 'g^', 'r^', 'b*', 'g*', 'r*', 'b+'};
+legend_string = {'500', '1000', '2000', '4000', '6000', '8000', '>8000'};
+legend_h = zeros(1,length(legend_string));
+
+% plot(cell_lat_long(:, 1), cell_lat_long(:, 2), '^');
 for ii = 1:length(cell_lat_long)
-    if real_radius(ii)>1000
-        text(cell_lat_long(ii,1), cell_lat_long(ii,2)+1, ...
-            {cell_data{ii,LAC_CI}; ...
-            num2str(cell_data{ii, REAL_RADIUS})});
+    
+    for jj=length(radius_section) : -1 : 1
+        if real_radius(ii)> radius_section(jj)
+            h = plot(cell_lat_long(ii, 1), cell_lat_long(ii, 2), colors{jj});
+            
+            if legend_h(jj)==0
+                legend_h(jj) = h;
+            end
+            break;
+        end
     end
-    % text(cell_lat_long(ii,1), cell_lat_long(ii,2)+1, num2str(cell_data{ii, REAL_RADIUS}));
 end
+
+legend(legend_h, legend_string);
 
 figure; % radius scatter dia
 % plot the real_radius
@@ -44,23 +61,15 @@ grid on;
 
 figure; % radius bar dia
 % 500, 1000, 2000, 4000, 6000, 8000, 10000, 12000
-x = [500, 1000, 2000, 4000, 6000, 8000, 10000, 12000];
+x_lable = {'500', '1000', '2000', '4000', '6000', '8000', '10000', '>10000'};
 nbins = [250, 750, 1500, 3000, 5000, 7000, 9000, 11000];
 N = hist(real_radius, nbins);
-bar(x, N);
+bar([1 : length(nbins)], N);
 for ii = 1 : length(N)
-    text(x(ii), N(ii)+5, num2str(N(ii)));
+    text(ii, N(ii)+5, num2str(N(ii)));
 end
-
-% % tag, freq, power, cell_type
-% data_analysis = cell(length(cell_data), 4);
-% 
-% for ii = 1 : length(cell_data)
-%     data_analysis{ii, 1} = cell_data(ii, REAL_RADIUS);
-%     data_analysis{ii, 2} = cell_data{ii, CELL_FREQ};
-%     data_analysis{ii, 3} = cell_data{ii, CELL_POWER};
-%     data_analysis{ii, 4} = cell_data{ii, CELL_CLASS};
-% end
+set(gca, 'xtick', [1 : length(nbins)]);
+set(gca, 'xticklabel', x_lable);
 
 figure;  % radius dia by cell type
 hold on;
