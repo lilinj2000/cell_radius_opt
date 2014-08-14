@@ -1,0 +1,7 @@
+BSC	SITE	altitude	latitude	longitude	CELL	accmin	antenna_gain	antenna_tilt	antenna_type	bcc	bcchno	bspwr	bspwrb	c_sys_type	cell_dir	cell_type	ci	env_char	height	lac	latitude	longitude	max_altitude	max_cell_radius	mcc	min_altitude	mnc	ncc	sector_angle	talim	override_ta
+---
+BSC82	BTS77	20	N60-00-00.0	E13-00-00	1	100	-120	0	OMNI	2	512	60	35	GSM1900	0	MICRO	1	1	10	1	NULL	NULL	30	150	10	10	22	2	120	6	NO
+BSC82	BTS77	20	N60-00-00.0	E13-00-19.40	2	100	-120	0	OMNI	2	512	60	35	GSM1900	0	MICRO	2	1	10	1	NULL	NULL	30	150	10	10	22	2	120	6	NO
+BSC82	BTS77	20	N60-00-00.0	E13-00-38.80	3	100	-120	0	OMNI	2	512	60	35	GSM1900	0	MICRO	3	1	10	1	NULL	NULL	30	150	10	10	22	2	120	6	NO
+BSC82	BTS77	20	N60-00-00.0	E13-00-58.20	4	100	-120	0	OMNI	2	512	60	35	GSM1900	0	MICRO	4	1	10	1	NULL	NULL	30	150	10	10	22	2	120	6	NO
+
