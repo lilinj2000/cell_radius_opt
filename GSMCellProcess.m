@@ -165,7 +165,7 @@ rogers = 1;
 turkey = 2;
 india = 3;
 
-country = india;
+country = rogers;
 
 
 switch country
@@ -184,7 +184,9 @@ switch country
         LATITUDE = 22;
         LONGITUDE = 23;
         ACCMIN = 7;
+        BCCHNO = 12;
         BSPWR = 13;
+        C_SYS_TYPE = 15;
         CELL_DIR = 16;
         CELL_TYPE = 17;
         ANTENNA_TYPE = 10;
@@ -261,8 +263,8 @@ end
 % gsm_tags = [suburban_brampton_tags; suburban_scarborough_tags];
 
 % urban dt
-% gsm_data = urban_dt_cell;
-% gsm_tags = urban_dt_tags;
+gsm_data = urban_dt_cell;
+gsm_tags = urban_dt_tags;
 
 
 % urban + suburban + rural
@@ -316,10 +318,10 @@ end
 % gsm_tags = india_rural_highway_tags2;
 
 % india all
-gsm_data = [india_medium_cell'; india_rural_cell'; ...
-            india_rural_highway_cell'];
-gsm_tags = [ india_medium_tags; india_rural_tags2; ...
-            india_rural_highway_tags2];
+% gsm_data = [india_medium_cell'; india_rural_cell'; ...
+%             india_rural_highway_cell'];
+% gsm_tags = [ india_medium_tags; india_rural_tags2; ...
+%             india_rural_highway_tags2];
 
 
 
@@ -385,6 +387,11 @@ radius = [];
 
 taLimStep = 120000/219; % 547.9425
 
+% store the cell characteristic
+cell_chr = [];
+
+% the bsc powere of the cell
+cell_power = [];
 for ii = 1:length(gsm_data)
     
     switch country
@@ -398,6 +405,10 @@ for ii = 1:length(gsm_data)
         [cell_angle(ii, 1), cell_angle(ii, 2)] = sectorAngle(gsm_data{ii}{ANTENNA_TYPE}, ...
             str2double(gsm_data{ii}{CELL_DIR}), str2double(gsm_data{ii}{SECTOR_ANGLE}));
         
+        [cell_chr(ii, 1), cell_chr(ii,2)] = cellChr(gsm_data{ii}(C_SYS_TYPE), gsm_data{ii}(CELL_TYPE));
+        
+       cell_power(ii, 1) = str2double(gsm_data{ii}(BSPWR));
+       
         case {india}
             cell_latlong(ii, 1) = str2double(gsm_data{ii}{LATITUDE});
             cell_latlong(ii, 2) = str2double(gsm_data{ii}{LONGITUDE});
@@ -522,6 +533,27 @@ for ii = 1 : size(radius, 2)-1
     legend(legend_str, 'Location', 'SouthEast');
     title(methods_name{ii});
 
+end
+
+clear cell;
+radius_by_cell = cell(5,3);
+for ii = 1 : length(cell_chr)
+    row_count = size(radius_by_cell{cell_chr(ii,1), cell_chr(ii,2)}, 1);
+    radius_by_cell{cell_chr(ii,1), cell_chr(ii,2)}(row_count+1, :) = radius(ii, :);
+end
+
+relative_radius_by_cell = cell(5,3);
+for ii = 1 : size(radius_by_cell, 1)
+    for jj = 1 : size(radius_by_cell, 2)
+        col_count = size(radius_by_cell{ii, jj}, 2);
+        
+        if col_count>0 
+            for kk = 1 : col_count-1
+                relative_radius_by_cell{ii, jj}(:, kk) = radius_by_cell{ii,jj}(:, kk) ...
+                   - radius_by_cell{ii, jj}(:, col_count); 
+            end
+        end
+    end
 end
 
 % caluculate the similar value
