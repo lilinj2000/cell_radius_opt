@@ -1,4 +1,4 @@
-function cell_data = initialCellData()
+function cell_data = initialCellData(country, data_area)
 % inital cell data
 % 
 
@@ -11,7 +11,12 @@ global CELL_POWER;
 global CUSTOM_RADIUS;
 global CELL_TALIM;
 global CELL_ACCMIN;
+global CELL_HEIGHT;
 global REAL_RADIUS;
+
+global rogers;
+global turkey;
+global india;
 
 
 %  the fields of the cell_data as below:
@@ -24,7 +29,8 @@ CELL_POWER = 6;
 CUSTOM_RADIUS = 7;
 CELL_TALIM = 8;
 CELL_ACCMIN = 9;
-REAL_RADIUS = 10;
+CELL_HEIGHT = 10;
+REAL_RADIUS = 11;
 
 MAX_FIELD = 10;
 
@@ -34,9 +40,6 @@ MAX_FIELD = 10;
 rogers = 1;
 turkey = 2;
 india = 3;
-
-country = rogers;
-
 
 switch country
     case {rogers}
@@ -60,6 +63,7 @@ switch country
         CELL_DIR = 16;
         CELL_TYPE = 17;
         ANTENNA_TYPE = 10;
+        HEIGHT = 20;
         MAX_CELL_RADIUS = 25;
         SECTOR_ANGLE = 30;
         TALIM = 31;
@@ -115,34 +119,55 @@ end
 
 % gsm_data = ImportGSMCellData(gsm_file);
 
-%%%%%%%%%%%%%%Rogers Data%%%%%%%%%%%%%%%%%%%
-% rural orange ville
-% gsm_data = rural_orangeville_cell;
-% gsm_tags = rural_orangeville_tags;
+rogers_area_rural_orangeville = 1;
+rogers_area_suburban_brampton = 2;
+rogers_area_suburban_scarborough = 3;
+rogers_area_suburban = 4;
+rogers_area_urban_dt = 5;
+rogers_area_all = 6;
 
-% suburban brampton 
-% gsm_data = suburban_brampton_cell;
-% gsm_tags = suburban_brampton_tags;
+switch data_area
+    case rogers_area_rural_orangeville
+    
+        %%%%%%%%%%%%%%Rogers Data%%%%%%%%%%%%%%%%%%%
+        % rural orange ville
+        gsm_data = rural_orangeville_cell;
+        gsm_tags = rural_orangeville_tags;
 
-% suburban scarborough
-% gsm_data = suburban_scarborough_cell;
-% gsm_tags = suburban_scarborough_tags;
+    case rogers_area_suburban_brampton
+        % suburban brampton 
+        gsm_data = suburban_brampton_cell;
+        gsm_tags = suburban_brampton_tags;
 
-% suburan brampton + scarborough
-% gsm_data = [suburban_brampton_cell'; suburban_scarborough_cell'];
-% gsm_tags = [suburban_brampton_tags; suburban_scarborough_tags];
+    case rogers_area_suburban_scarborough
+        % suburban scarborough
+        gsm_data = suburban_scarborough_cell;
+        gsm_tags = suburban_scarborough_tags;
 
-% urban dt
-gsm_data = urban_dt_cell;
-gsm_tags = urban_dt_tags;
+    case rogers_area_suburban
+        % suburan brampton + scarborough
+        gsm_data = [suburban_brampton_cell'; suburban_scarborough_cell'];
+        gsm_tags = [suburban_brampton_tags; suburban_scarborough_tags];
 
+    case rogers_area_urban_dt
+        % urban dt
+        gsm_data = urban_dt_cell;
+        gsm_tags = urban_dt_tags;
 
-% urban + suburban + rural
-% gsm_data = [urban_dt_cell'; suburban_brampton_cell'; ...
+    case rogers_area_all
+        % urban + suburban + rural
+        gsm_data = [urban_dt_cell'; suburban_brampton_cell'; ...
+                    suburban_scarborough_cell'; rural_orangeville_cell'];
+        gsm_tags = [ urban_dt_tags; suburban_brampton_tags; ...
+                    suburban_scarborough_tags; rural_orangeville_tags];
+    otherwise
+        error('invalid input');
+% suburban + rural
+% gsm_data = [suburban_brampton_cell'; ...
 %             suburban_scarborough_cell'; rural_orangeville_cell'];
-% gsm_tags = [ urban_dt_tags; suburban_brampton_tags; ...
+% gsm_tags = [ suburban_brampton_tags; ...
 %             suburban_scarborough_tags; rural_orangeville_tags];
-
+end
 
 %%%%%%%%%%%%Turkey Data%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % turkey beyoglu
@@ -195,17 +220,6 @@ gsm_tags = urban_dt_tags;
 
 
 
-% cell type 'MACRO', 'MICRO', 'PICO'
-% cell_type = 'MACRO';
-% index_cell = 0;
-% for ii = 1 : length(gsm_data)
-%     if strcmp(gsm_data{ii}(CELL_TYPE), cell_type)
-%         index_cell = index_cell + 1;
-%         gsm_data_internal{index_cell} = gsm_data{ii};
-%     end
-% end
-% gsm_data = gsm_data_internal;
-
 clear cell;
 cell_data = cell(0, MAX_FIELD);
 tags = [length(gsm_tags), 1];
@@ -217,12 +231,13 @@ for ii = 1 : length(gsm_data)
             [cell_angle(1, 1), cell_angle(1, 2)] = sectorAngle(gsm_data{ii}{ANTENNA_TYPE}, ...
             str2double(gsm_data{ii}{CELL_DIR}), str2double(gsm_data{ii}{SECTOR_ANGLE}));
         
-            cell_freq = gsm_data{ii}(C_SYS_TYPE);
-            cell_type = gsm_data{ii}(CELL_TYPE);
+            cell_freq = gsm_data{ii}{C_SYS_TYPE};
+            cell_type = gsm_data{ii}{CELL_TYPE};
             cell_power = gsm_data{ii}{BSPWR};
             custom_radius = gsm_data{ii}{MAX_CELL_RADIUS};
             cell_talim = gsm_data{ii}{TALIM};
             cell_accmin = gsm_data{ii}{ACCMIN};
+            cell_height = gsm_data{ii}{HEIGHT};
             
             
         case {india}
@@ -253,6 +268,7 @@ for ii = 1 : length(gsm_data)
     cell_data{ii, CELL_POWER} = cell_power;
     cell_data{ii, CUSTOM_RADIUS} = custom_radius;
     cell_data{ii, CELL_TALIM} = cell_talim;
+    cell_data{ii, CELL_HEIGHT} = cell_height;
     cell_data{ii, CELL_ACCMIN} = cell_accmin;
     
     

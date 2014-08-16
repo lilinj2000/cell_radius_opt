@@ -386,10 +386,10 @@ classdef VoronoiFortuneAlgo < handle
             end
         end
         
-        % way: 1 - max value; 2 - mean value
-        function radius = calculateRadius(VFA, p, way)
+        % way: 1 - max value; 2 - mean value; 3 - min value
+        function radius = calculateRadius(VFA, p, way, cell_angle)
             max_radius = 30000; % 30km
-            radius = 0;
+            radius = max_radius;
             
             xmin = VFA.axis_scaling.xmin;
             xmax = VFA.axis_scaling.xmax;
@@ -409,9 +409,17 @@ classdef VoronoiFortuneAlgo < handle
                         continue;
                     end
                     
-                    distance = VFA.distance(p, ...
-                        VFA.edge_list{index,2}(ii,1).end_p);
+                    
+                    if ~inArcDirection(p, cell_angle, point)
+                        continue;
+                    end
+                    
+                    distance = VFA.distance(p, point);
                                           
+                    if distance<=50
+                        continue;
+                    end
+                    
                     if distance>max_radius
                         distance = max_radius;
                     end
@@ -419,13 +427,14 @@ classdef VoronoiFortuneAlgo < handle
                     dist = [dist; distance];                                        
                 end
 
-                if way==1 % max value
+                if way==1  && ~isempty(dist) % max value
                     radius = max(dist);
-                elseif way==2 % mean value
+                elseif way==2 && ~isempty(dist) % mean value
                     radius = mean(dist);
+                elseif way==3 && ~isempty(dist)
+                    radius = min(dist);
                 end
-                
-                
+                  
             end
 
         end

@@ -14,8 +14,20 @@ global CELL_TALIM;
 global CELL_ACCMIN;
 global REAL_RADIUS;
 
+
+rogers = 1;
+turkey = 2;
+india = 3;
+
+rogers_area_rural_orangeville = 1;
+rogers_area_suburban_brampton = 2;
+rogers_area_suburban_scarborough = 3;
+rogers_area_suburban = 4;
+rogers_area_urban_dt = 5;
+rogers_area_all = 6;
+
 % init the cell
-cell_data = initialCellData();
+cell_data = initialCellData(rogers, rogers_area_rural_orangeville);
 
 
 for ii=1:length(cell_data)
@@ -53,7 +65,16 @@ for ii = 1:length(cell_lat_long)
     end
 end
 
-legend(legend_h, legend_string);
+real_legend_h = [];
+real_legend_string = cell(0);
+for ii = 1:length(legend_h)
+    if legend_h(ii)~=0
+        index = length(real_legend_h) + 1;
+        real_legend_h(index) = legend_h(ii);
+        real_legend_string{index} = legend_string{ii};
+    end
+end
+legend(real_legend_h, real_legend_string);
 title('cell geo-location');
 
 figure; % radius scatter dia
@@ -65,15 +86,22 @@ title('radius scatter');
 figure; % radius bar dia
 % 500, 1000, 2000, 4000, 6000, 8000, 10000, 12000
 x_lable = {'500', '1000', '2000', '4000', '6000', '8000', '10000', '>10000'};
-nbins = [250, 750, 1500, 3000, 5000, 7000, 9000, 11000];
+nbins = [250, 750, 1250, 2750, 5250, 6750, 9250, 10750];
 N = hist(real_radius, nbins);
 bar([1 : length(nbins)], N);
 for ii = 1 : length(N)
-    text(ii, N(ii)+5, num2str(N(ii)));
+    text(ii, N(ii)+1, num2str(N(ii)));
 end
 set(gca, 'xtick', [1 : length(nbins)]);
 set(gca, 'xticklabel', x_lable);
 title('radius distribution');
+
+
+% pie 
+pie_legend = x_lable ;
+pie_title = 'radius dist';
+drawPie(real_radius, nbins, pie_legend, pie_title)
+
 
 figure;  % radius dia by cell type
 hold on;
