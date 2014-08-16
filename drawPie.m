@@ -21,7 +21,7 @@ function drawPie(data, M, pie_legend, pie_title)
         end
     end
     
-    legend(legend_str);
+    legend(legend_str, 'Location','EastOutside');
     
     title(pie_title);
     

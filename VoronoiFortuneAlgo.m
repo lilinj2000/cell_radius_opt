@@ -417,7 +417,7 @@ classdef VoronoiFortuneAlgo < handle
                     distance = VFA.distance(p, point);
                                           
                     if distance<=50
-                        continue;
+                        distance = 500;
                     end
                     
                     if distance>max_radius
@@ -433,6 +433,9 @@ classdef VoronoiFortuneAlgo < handle
                     radius = mean(dist);
                 elseif way==3 && ~isempty(dist)
                     radius = min(dist);
+                else %it's max radius
+                    fprintf('(%d, %d) - angle (%d, %d)\n', p.x, p.y, ...
+                        cell_angle(1), cell_angle(2));
                 end
                   
             end

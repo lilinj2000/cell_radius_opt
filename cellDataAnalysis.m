@@ -26,6 +26,8 @@ rogers_area_suburban = 4;
 rogers_area_urban_dt = 5;
 rogers_area_all = 6;
 
+subhead = {'(rogers rural orangeville)'};
+
 % init the cell
 cell_data = initialCellData(rogers, rogers_area_rural_orangeville);
 
@@ -37,71 +39,7 @@ for ii=1:length(cell_data)
     real_radius(ii) = cell_data{ii, REAL_RADIUS};
 end
 
-% % plot the cell geo location
-% figure;
-% plot(cell_lat_long(:, 1), cell_lat_long(:, 2), '^');
-
-figure; % plot the cell geo location
-hold on;
-
-radius_section = [0, 500, 1000, 2000, 4000, 6000, 8000, 10000];
-colors = {'b^', 'g^', 'r^', 'b*', 'g*', 'r*', 'b+', 'g+'};
-legend_string = {'500', '1000', '2000', '4000', '6000', '8000', ...
-    '10000', '> 10000'};
-legend_h = zeros(1,length(legend_string));
-
-% plot(cell_lat_long(:, 1), cell_lat_long(:, 2), '^');
-for ii = 1:length(cell_lat_long)
-    
-    for jj=length(radius_section) : -1 : 1
-        if real_radius(ii)> radius_section(jj)
-            h = plot(cell_lat_long(ii, 1), cell_lat_long(ii, 2), colors{jj});
-            
-            if legend_h(jj)==0
-                legend_h(jj) = h;
-            end
-            break;
-        end
-    end
-end
-
-real_legend_h = [];
-real_legend_string = cell(0);
-for ii = 1:length(legend_h)
-    if legend_h(ii)~=0
-        index = length(real_legend_h) + 1;
-        real_legend_h(index) = legend_h(ii);
-        real_legend_string{index} = legend_string{ii};
-    end
-end
-legend(real_legend_h, real_legend_string);
-title('cell geo-location');
-
-figure; % radius scatter dia
-% plot the real_radius
-plot(real_radius, '*');
-grid on;
-title('radius scatter');
-
-figure; % radius bar dia
-% 500, 1000, 2000, 4000, 6000, 8000, 10000, 12000
-x_lable = {'500', '1000', '2000', '4000', '6000', '8000', '10000', '>10000'};
-nbins = [250, 750, 1250, 2750, 5250, 6750, 9250, 10750];
-N = hist(real_radius, nbins);
-bar([1 : length(nbins)], N);
-for ii = 1 : length(N)
-    text(ii, N(ii)+1, num2str(N(ii)));
-end
-set(gca, 'xtick', [1 : length(nbins)]);
-set(gca, 'xticklabel', x_lable);
-title('radius distribution');
-
-
-% pie 
-pie_legend = x_lable ;
-pie_title = 'radius dist';
-drawPie(real_radius, nbins, pie_legend, pie_title)
-
+radiusAnalysis(real_radius, cell_lat_long, subhead)
 
 figure;  % radius dia by cell type
 hold on;
@@ -125,7 +63,7 @@ end
 xlim([0, OTHER+10]);
 set(gca, 'xtick', [MACRO, MICRO, OTHER]);
 set(gca, 'xticklabel', {'MACRO', 'MICRO', 'OTHER'});
-title('radius vs cell type');
+title(vertcat({'radius vs cell type'}, subhead));
 
 figure; % radius dia by freq
 hold on;
@@ -156,7 +94,7 @@ end
 xlim([0, OTHER+10]);
 set(gca, 'xtick', [GSM800, GSM900, GSM1800, GSM1900, OTHER]);
 set(gca, 'xticklabel', {'GSM800', 'GSM900', 'GSM1800', 'GSM1900', 'OTHER'});
-title('radius vs frequence');
+title(vertcat({'radius vs frequence'}, subhead));
 
 figure; % radius dia by power
 cell_power = [];
@@ -165,7 +103,7 @@ for ii = 1 : length(cell_data)
 end
 plot(cell_power, real_radius, '*');
 xlim([min(cell_power)-5, max(cell_power)+5]);
-title('radius vs power');
+title(vertcat({'radius vs power'}, subhead));
 
 figure; % radius dia by freq & power
 hold on;
@@ -191,4 +129,5 @@ end
 xlim([0, OTHER+10]);
 set(gca, 'xtick', [GSM800, GSM900, GSM1800, GSM1900, OTHER]);
 set(gca, 'xticklabel', {'GSM800', 'GSM900', 'GSM1800', 'GSM1900', 'OTHER'});
-title('radius vs frequence vs power');
+grid on;
+title(vertcat({'radius vs frequence vs power'}, subhead));

@@ -191,9 +191,9 @@ rogers_area_all = 6;
 urban = 1;
 suburban = 2;
 rural = 3;
-area_type = rural;
+area_type = urban;
 
-cell_data = initialCellData(rogers, rogers_area_rural_orangeville);
+cell_data = initialCellData(rogers, rogers_area_urban_dt);
 
 % [ m, 1]
 radius_inner = zeros(length(cell_data), 1);
@@ -325,7 +325,7 @@ for ii=1:length(real_radius)
     switch area_type
         case urban
             if real_radius(ii)<=max_radius_urban ...
-                && radius(ii, index_voronoi_radius_mean) <= max_radius
+                && radius(ii, index_voronoi_radius_mean) <= max_radius_urban
                 
                 match = true;
             end

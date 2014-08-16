@@ -16,16 +16,15 @@ function result = inArcDirection(c, cell_angle, p)
     % but, in plane geo is anticlockwise
     if start_angle<stop_angle
         start_angle = start_angle + 2.*pi;
+    elseif start_angle==stop_angle
+        result = 1; % it's circle
+        return ;
     end
     
     geo_angle = [stop_angle, start_angle];
     
     theta = (geo_angle(2) - geo_angle(1))/2;
     
-    if theta >= pi % it's circle
-        result = 1;
-        return ;
-    end
     
     p0.x = c.x + 1000*cos(sum(geo_angle)/2);
     p0.y = c.y + 1000*sin(sum(geo_angle)/2);
