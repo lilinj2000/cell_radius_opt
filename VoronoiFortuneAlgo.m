@@ -14,7 +14,9 @@ classdef VoronoiFortuneAlgo < handle
         arc_list = struct([]);           % all the beach lines 
         
         edge_list = cell(0);            % store the site points => seg list
-        
+        nbr_point_list = cell(0);       % store the site point of the neighbour points
+                                        %               point => point list
+        log = log4m.getLogger('voronoi.log');
     end
     
     methods
@@ -23,12 +25,15 @@ classdef VoronoiFortuneAlgo < handle
         % axis_opt:
         function VFA = VoronoiFortuneAlgo(site_points, axis_ratio)
             
+            VFA.log.setCommandWindowLevel(VFA.log.OFF);
+            VFA.log.setLogLevel(VFA.log.ALL);
+            
             [site_points_sort, I, ~] = unique(site_points, 'rows', 'first');
             [~, I] = sort(I);
             site_points = site_points_sort(I, :);
             
             if size(site_points, 1)<2 || size(site_points, 2)~=2
-                disp('invalid input for site points, which must be m*2 array');
+                VFA.log.fatal('VoronoiFortuneAlgo()', 'invalid input for site points, which must be m*2 array');
                 return;
             end
             
@@ -47,7 +52,7 @@ classdef VoronoiFortuneAlgo < handle
             ymax = max([VFA.site_points.y]);
             
             if ~isnumeric(axis_ratio)
-                disp('input invalid, the axis_ratio must be numeric.');
+                VFA.log.fatal('VoronoiFortuneAlgo()', 'input invalid, the axis_ratio must be numeric.');
                 return;
             end
             
@@ -67,6 +72,7 @@ classdef VoronoiFortuneAlgo < handle
             % gen site point events
             VFA.site_point_events = VFA.site_points(idx);
             
+            VFA.log.trace('do()', 'VFA start do ... ');
             
             % go through all the site events
             while ~isempty(VFA.site_point_events)
@@ -79,10 +85,14 @@ classdef VoronoiFortuneAlgo < handle
                        
                        % on circle event
                        VFA.onCircleEvent(VFA.circle_events(1));
+                       
+                       VFA.log.trace('do()', strcat('VFA do in loop - circle events : ', num2str(length(VFA.circle_events))));
                     else
                        break;
                     end
                 end
+                
+                VFA.log.trace('do()', strcat('VFA do break loop - circle events : ', num2str(length(VFA.circle_events))));
     
                 % on site event
                 VFA.onSiteEvent(VFA.site_point_events(1));
@@ -92,6 +102,8 @@ classdef VoronoiFortuneAlgo < handle
                 
                 % remove the site point event
                 VFA.site_point_events(1) = [];
+                
+                VFA.log.trace('do()', strcat('VFA do site events : ', num2str(length(VFA.site_point_events))));
             end
             
             % handle the left circle events
@@ -101,7 +113,10 @@ classdef VoronoiFortuneAlgo < handle
                 %waitforbuttonpress;
                
                 % handle circle event
-               VFA.onCircleEvent(VFA.circle_events(1));    
+               VFA.onCircleEvent(VFA.circle_events(1)); 
+               
+               VFA.log.trace('do()', strcat('VFA do in the left circle events loop : ', num2str(length(VFA.circle_events))));
+    
             end
 
             % finish all the left arc list
@@ -110,6 +125,7 @@ classdef VoronoiFortuneAlgo < handle
             VFA.showFigure([], []);
             %waitforbuttonpress;
             
+            VFA.log.trace('do()', 'VFA end do ... ');
         end
         
         function onSiteEvent(VFA, p)
@@ -164,8 +180,8 @@ classdef VoronoiFortuneAlgo < handle
             end
             
             % for the specail point, which no intersect
-            start_p.x = ymax;
-            start_p.y = (VFA.arc_list(ii).p.x+p.x)./2;
+            start_p.y = VFA.axis_scaling.ymax;
+            start_p.x = (VFA.arc_list(ii).p.x+p.x)./2;
 
             arc.seg0.start_p = start_p;
 
@@ -355,6 +371,9 @@ classdef VoronoiFortuneAlgo < handle
             
             VFA.pushEdge(seg, p1);
             VFA.pushEdge(seg, p2);
+            
+            VFA.pushNbrPoint(p1, p2);
+            VFA.pushNbrPoint(p2, p1);
                         
         end
         
@@ -386,61 +405,238 @@ classdef VoronoiFortuneAlgo < handle
             end
         end
         
-        % way: 1 - max value; 2 - mean value; 3 - min value
-        function radius = calculateRadius(VFA, p, way, cell_angle)
-            max_radius = 30000; % 30km
-            radius = max_radius;
+        function pushNbrPoint(VFA, p, NbrPoint)
+            
+            index = VFA.findNbrPointList(p);
+            if index~=0
+                VFA.nbr_point_list{index, 2} = [VFA.nbr_point_list{index, 2}; NbrPoint];
+            else
+                index = size(VFA.nbr_point_list, 1)+1;
+                
+                VFA.nbr_point_list{index, 1} = p;
+                VFA.nbr_point_list{index, 2} = NbrPoint;
+            end
+        end
+        
+        function index = findNbrPointList(VFA, p)
+            index = 0;
+            
+            if isempty(VFA.nbr_point_list)
+                return ;
+            end
+            
+            for ii = 1 : size(VFA.nbr_point_list, 1)
+                if VFA.nbr_point_list{ii, 1}.x==p.x && VFA.nbr_point_list{ii, 1}.y==p.y
+                    index = ii;
+                    return ;
+                end
+            end
+        end
+        
+        % way: 1 - max value; 2 - mean value; 3 - min value 
+        %      4 - ISD mean;  5 - ISD max;
+        
+        % 1st - base on vertex points (radiusMax, radiusMean, radiusMin, radiusAngle)
+        % 2nd - base on site points (radiusMax, radiusMean, radiusMin,
+        %   radiusAngle)
+        %
+        % input:
+        %   cell_enu_angle - [cell_enu, start_angle, stop_angle, bspwr, accmin, real_radius]
+        %   isd_clearance - very closest point should be skipped.
+        %   toh_model - the trained OH model [A, B]
+        % output:
+        %   radius - [vradiusMax, vradiusMean, vradiusMin, vradiusAngle,
+        %             sradiusMax, sradiusMean, sradiusMin, sradiusAngle]
+        %
+        function radius = calculateRadius(VFA, cell_enu_angle_radius, isd_clearance, toh_model)
+          
+           
+           max_radius = 30000; % 30km
+           min_radius = 100;
+           
+           idx_lat = 1;
+           idx_long = 2;
+           idx_start_angle = 3;
+           idx_stop_angle = 4;
+           idx_bspwr = 5;
+           idx_accmin = 6;
+           idx_dist = 7;
+           
+           radius = [];
+           
+            for ii=1:length(cell_enu_angle_radius)
+            
+                if cell_enu_angle_radius(ii, idx_dist)~=0
+                    p.x = cell_enu_angle_radius(ii, idx_lat);
+                    p.y = cell_enu_angle_radius(ii, idx_long);
+                    
+                    cell_angle = cell_enu_angle_radius(ii, idx_start_angle:idx_stop_angle);
+                    cell_power = cell_enu_angle_radius(ii, idx_bspwr:idx_accmin);
+                    
+                    vradius = VFA.computeVRadius(p, cell_angle, cell_power, isd_clearance, max_radius, min_radius, toh_model);
+                    
+                    sradius = VFA.computeSRadius(p, cell_angle, cell_power, cell_enu_angle_radius, isd_clearance, max_radius, min_radius, toh_model);
+                    
+                    radius = [radius; vradius, sradius];
+                end
+                
+            end
+           
+        end
+        
+        function radius = computeVRadius(VFA, p, cell_angle, cell_power, isd_clearance, max_radius, min_radius, toh_model)
             
             xmin = VFA.axis_scaling.xmin;
             xmax = VFA.axis_scaling.xmax;
             ymin = VFA.axis_scaling.ymin;
             ymax = VFA.axis_scaling.ymax;
             
+            radius = [];
+  
+            % compute the radius with vertex points
             index = VFA.findEdgeList(p);
-
+            
             if index~=0
                 dist = [];
-                for ii = 1 : size(VFA.edge_list{index, 2}, 1)
-                   
-                    point = VFA.edge_list{index,2}(ii,1).end_p;
+                dist_angle = [];
+                
+                bAngleFound = 0;
+                
+                for jj = 1 : length(VFA.edge_list{index, 2})
+                    
+                    point = VFA.edge_list{index,2}(jj,1).end_p;
                     if point.x<xmin || point.x>xmax ...
-                        || point.y<ymin || point.y>ymax
+                            || point.y<ymin || point.y>ymax
                         
+                        distance = max_radius;
+                    else
+                        distance = VFA.distance(p, point);
+                    end
+                     
+                    if distance>max_radius
+                        distance = max_radius;
+                    end
+                   
+                    if inArcDirection(p, cell_angle, point)
+                        bAngleFound = 1;
+                    end
+                    
+                    if distance<isd_clearance
                         continue;
                     end
                     
+                    dist = [dist; distance];
+                    dist_angle = [dist_angle; distance];
+                end
+
+                if ~isempty(dist)
+                    vradiusMax = max(dist);
+                    vradiusMean = mean(dist);
+                    vradiusMin = min(dist);
+                else
+                    [vradiusMax, vradiusMean, vradiusMin] = deal(min_radius);
+                end
+                
+                if ~isempty(dist_angle)
+                    vradiusAngle = min(dist_angle);
+                elseif bAngleFoud
+                    vradiusAngle = min_radius;
+                else % tohmodel
+                    vradiusAngle = tohFunc(cell_power, toh_model);
+                end
+            else
+                VFA.log.error('computeVRadius()', strcat('error data. (x,y) - (', num2str(p.x), ',', num2str(p.y), ')'));                
+                [vradiusMax, vradiusMean, vradiusMin, vradiusAngle] = tohFunc(cell_power, toh_model);
+            end
+                
+            radius = [vradiusMax, vradiusMean, vradiusMin, vradiusAngle];
+        end
+        
+        
+        function radius = computeSRadius(VFA, p, cell_angle, cell_power, cell_enu_angle_radius, isd_clearance, max_radius, min_radius, toh_model)
+            
+            idx_lat = 1;
+            idx_long = 2;
+            idx_start_angle = 3;
+            idx_stop_angle = 4;
+            idx_bspwr = 5;
+            idx_accmin = 6;
+            idx_dist = 7;
+            
+            % compute the rdius with the neighbour site points
+            index = VFA.findNbrPointList(p);
+            if index~=0
+                dist = [];
+                dist_angle = [];
+                bAngleFound = 0;
+                for jj = 1 : length(VFA.nbr_point_list{index, 2})
                     
-                    if ~inArcDirection(p, cell_angle, point)
-                        continue;
-                    end
+                    point = VFA.nbr_point_list{index,2}(jj,1);
                     
                     distance = VFA.distance(p, point);
-                                          
-                    if distance<=50
-                        distance = 500;
-                    end
                     
                     if distance>max_radius
                         distance = max_radius;
                     end
+                    
+                    
+                    
+                    bFound = 0;
+                    
+                    if inArcDirection(p, cell_angle, point)
+                        
+                        bAngleFound = 1;
+                        bFound = 1;
+                        for kk=1:length(cell_enu_angle_radius)
+                            if cell_enu_angle_radius(kk, idx_lat)==point.x ...
+                                    && cell_enu_angle_radius(kk, idx_long)==point.y
+                                if inArcDirection(point, cell_enu_angle_radius(kk, idx_start_angle:idx_stop_angle), p)
+                                    bFound = 2;
+                                    break;
+                                end
+                            end
+                        end
+                    end
+                
+                
+                    if distance<isd_clearance
+                        continue;
+                    end
 
-                    dist = [dist; distance];                                        
+                    dist = [dist; distance];
+                    
+                    if bFound==2
+                        dist_angle = [dist_angle; distance/2];
+                    elseif bFound==1
+                        dist_angle = [dist_angle; distance];
+                    end
                 end
-
-                if way==1  && ~isempty(dist) % max value
-                    radius = max(dist);
-                elseif way==2 && ~isempty(dist) % mean value
-                    radius = mean(dist);
-                elseif way==3 && ~isempty(dist)
-                    radius = min(dist);
-                else %it's max radius
-                    fprintf('(%d, %d) - angle (%d, %d)\n', p.x, p.y, ...
-                        cell_angle(1), cell_angle(2));
+                
+                if ~isempty(dist)
+                    sradiusMax = max(dist);
+                    sradiusMean = mean(dist);
+                    sradiusMin = min(dist);
+                else
+                    [sradiusMax, sradiusMean, sradiusMin] = deal(min_radius);
                 end
-                  
+                
+                if ~isempty(dist_angle)
+                    sradiusAngle = min(dist_angle);
+                elseif bAngleFound
+                    sradiusAngle = min_radius
+                else %toh
+                    sradiusAngle = VFA.tohFunc(cell_power, toh_model);
+                end
+            else
+                VFA.log.error('computeSRadius()', strcat('error data. (x,y) - (', num2str(p.x), ',', num2str(p.y), ')')); 
+                [sradiusMax, sradiusMean, sradiusMin, sradiusAngle] = VFA.tohFunc(cell_power, toh_model);
             end
-
+            
+            radius = [sradiusMax, sradiusMean, sradiusMin, sradiusAngle];
         end
+        
+           
+        
         
         function showFigure(VFA, y, c)
 
@@ -731,6 +927,22 @@ classdef VoronoiFortuneAlgo < handle
         
         function dist = distance(p1, p2)
             dist = sqrt((p1.x-p2.x).^2 + (p1.y-p2.y).^2);
+        end
+        
+        function radius = tohFunc(cell_power, toh_model)
+
+            max_radius = 30000;
+            
+            %[A, B, radius] = tohPropagationAlgorithm(cell_radius_power, toh_model)
+            if ~isempty(toh_model)
+                cell_radius_power = [cell_power, 0];
+                [~, ~, radius] = tohPropagationAlgorithm(cell_radius_power, toh_model);
+            else
+                radius = max_radius;
+            end
+            
+            radius = min(max_radius, radius);
+            
         end
     end
 end

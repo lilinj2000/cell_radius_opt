@@ -1,4 +1,4 @@
-function drawPie(data, M, pie_legend, pie_title)
+function result = drawPie(data, M, pie_legend, pie_title)
 
     if length(M)~=length(pie_legend)
         error('invalid input');
@@ -24,5 +24,7 @@ function drawPie(data, M, pie_legend, pie_title)
     legend(legend_str, 'Location','EastOutside');
     
     title(pie_title);
+    
+    result = round(N./sum(N).*100) ;
     
 end

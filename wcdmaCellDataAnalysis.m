@@ -3,22 +3,7 @@ clear;
 
 close all;
 
-global LAC_CI;
-global LAT_LONG;
-global CELL_ANGLE;
-global CELL_FREQ;
-global CELL_CLASS;
-global CELL_POWER;
-global CUSTOM_RADIUS;
-global CELL_TALIM;
-global CELL_ACCMIN;
-global REAL_RADIUS;
-
-
-rogers = 1;
-turkey = 2;
-india = 3;
-china = 4;
+china = 1;
 
 rogers_area_rural_orangeville = 1;
 rogers_area_suburban_brampton = 2;
@@ -39,27 +24,19 @@ india_rural = 14;
 india_rural_highway = 15;
 india_all = 16;
 
-china_beijing = 17;
+% china_beijing = 17;
 
-china_wuxi = 18;
-
-subhead = {'(china wuxi - real radius)'};
+subhead = {'(rogers urban_dt - real radius)'};
 
 % init the cell
-cell_data = initialCellData(china, china_wuxi);
+cell_data = initialCellData(rogers, rogers_area_urban_dt);
 
-index_radius = 0;
-cell_data_tag = [];
+
 for ii=1:length(cell_data)
-    if cell_data{ii, REAL_RADIUS}~=0
-        cell_data_tag = [cell_data_tag; cell_data(ii, :)];
-        
-        index_radius = index_radius + 1;
-        cell_lat_long(index_radius, 1) = cell_data{ii, LAT_LONG}(1);
-        cell_lat_long(index_radius, 2) = cell_data{ii, LAT_LONG}(2);
+    cell_lat_long(ii, 1) = cell_data{ii, LAT_LONG}(1);
+    cell_lat_long(ii, 2) = cell_data{ii, LAT_LONG}(2);
     
-        real_radius(index_radius) = cell_data{ii, REAL_RADIUS};
-    end
+    real_radius(ii) = cell_data{ii, REAL_RADIUS};
 end
 
 radiusAnalysis(real_radius, cell_lat_long, subhead)
@@ -70,8 +47,8 @@ MACRO = 10;
 MICRO = 20;
 OTHER = 30;
 
-for ii = 1 : length(cell_data_tag)
-    cell_type = char(cell_data_tag{ii, CELL_CLASS});
+for ii = 1 : length(cell_data)
+    cell_type = char(cell_data{ii, CELL_CLASS});
     
     switch cell_type
         case 'MACRO'
@@ -97,8 +74,8 @@ GSM1800 = 30;
 GSM1900 = 40;
 OTHER = 50;
 
-for ii = 1 : length(cell_data_tag)
-    cell_freq = char(cell_data_tag{ii, CELL_FREQ});
+for ii = 1 : length(cell_data)
+    cell_freq = char(cell_data{ii, CELL_FREQ});
     
     switch cell_freq
         case 'GSM800'
@@ -121,7 +98,7 @@ title(vertcat({'radius vs frequence'}, subhead));
 
 
 cell_power = [];
-for ii = 1 : length(cell_data_tag)
+for ii = 1 : length(cell_data)
     if isempty(cell_data{ii, CELL_POWER})
         cell_power(ii) = 0;
     else
@@ -139,20 +116,20 @@ if ~isempty(find(cell_power~=0))
     hold on;
     view(3);
 
-    for ii = 1 : length(cell_data_tag)
-        cell_freq = char(cell_data_tag{ii, CELL_FREQ});
+    for ii = 1 : length(cell_data)
+        cell_freq = char(cell_data{ii, CELL_FREQ});
 
         switch cell_freq
             case 'GSM800'
-                plot3(GSM800, str2num(char(cell_data_tag{ii, CELL_POWER})), real_radius(ii), '*');
+                plot3(GSM800, str2num(char(cell_data{ii, CELL_POWER})), real_radius(ii), '*');
             case 'GSM900'
-                plot3(GSM900, str2num(char(cell_data_tag{ii, CELL_POWER})), real_radius(ii), '*');
+                plot3(GSM900, str2num(char(cell_data{ii, CELL_POWER})), real_radius(ii), '*');
             case 'GSM1800'
-                plot3(GSM1800, str2num(char(cell_data_tag{ii, CELL_POWER})), real_radius(ii), '*');
+                plot3(GSM1800, str2num(char(cell_data{ii, CELL_POWER})), real_radius(ii), '*');
             case 'GSM1900'
-                plot3(GSM1900, str2num(char(cell_data_tag{ii, CELL_POWER})), real_radius(ii), '*');
+                plot3(GSM1900, str2num(char(cell_data{ii, CELL_POWER})), real_radius(ii), '*');
             otherwise
-                plot3(OTHER, str2num(char(cell_data_tag{ii, CELL_POWER})), real_radius(ii), '*');
+                plot3(OTHER, str2num(char(cell_data{ii, CELL_POWER})), real_radius(ii), '*');
         end
     end
 

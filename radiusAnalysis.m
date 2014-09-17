@@ -49,17 +49,21 @@ nbins = [250, 750, 1250, 2750, 5250, 6750, 9250, 10750];
 N = hist(radius, nbins);
 bar([1 : length(nbins)], N);
 for ii = 1 : length(N)
-    text(ii, N(ii)+3, num2str(N(ii)));
+    if N(ii)~=0
+        text(ii, N(ii)+3, num2str(N(ii)));
+    end
 end
 set(gca, 'xtick', [1 : length(nbins)]);
 set(gca, 'xticklabel', x_lable);
 title(vertcat({'radius histogram'}, subhead));
+ylim([0, max(N)*1.25]);
+
 
 
 % pie 
 pie_legend = x_lable ;
 pie_title = vertcat({'radius pie'}, subhead);
-drawPie(radius, nbins, pie_legend, pie_title)
+drawPie(radius, nbins, pie_legend, pie_title);
 
 
 end
