@@ -1,15 +1,17 @@
+%% CELLRADIUSPROCESS
+% the cell radius optimization main process
 
+
+%% environment initial
 close all;
 clear;
 clc;
 
 
+%% Parameter Confgure
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%  Parameter Confgure %%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% General parametr configure
+%%% General parametr configure
 
 % Specifies the distance between one site and another when searching 
 % for co-located cells. 
@@ -59,7 +61,7 @@ UPPER_FREQUENCE_LIST = NA;
 % Example: LOWER_FREQUENCE_LIST =  10, 20, 30, 50
 LOWER_FREQUENCE_LIST = NA;
 
-% ISD & Voronoi Algorithm configure
+%%% ISD & Voronoi Algorithm configure
 
 % Specifies the algorithm Cell Radius Adjuster uses to determine the cell
 % radius.
@@ -98,17 +100,16 @@ ISD_NumberOfClosestCells = 5;
 % towards radius when ISD algorithm is used.
 ISD_GeographicalDistanceRatio = 0.7;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%Algorithm Selection%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Algorithm Method Selection
+
 false = 0;
 true = 1;
 
-custom_radius = false;
-ta_radius = false;
-oh_model = true;
-isd_radius = true;
-voronoi_radius = true;
+custom_method = false;
+ta_method = false;
+oh_method = false;
+isd_method = true;
+voronoi_method = false;
 
 methods = 0;
 index_custom_radius = 0;
@@ -132,19 +133,19 @@ index_voronoi_sradius_angle = 0;
 
 methods_name = {};
 
-if custom_radius
+if custom_method
     methods = methods + 1;
     index_custom_radius = methods;
     methods_name{index_custom_radius} = 'custom radius';
 end
 
-if ta_radius 
+if ta_method 
     methods = methods + 1;
     index_ta_radius = methods;
     methods_name{index_ta_radius} = 'TA';
 end
 
-if oh_model
+if oh_method
     methods = methods + 1;
     index_oh_model = methods;
     methods_name{index_oh_model} = 'OH';
@@ -154,7 +155,7 @@ if oh_model
     methods_name{index_toh_model} = 'TOH';
 end
 
-if isd_radius
+if isd_method
     methods = methods + 1;
     index_isd_max_radius = methods;
     methods_name{index_isd_max_radius} = 'ISD max';
@@ -172,7 +173,7 @@ if isd_radius
     methods_name{index_isd_angle_radius} = 'ISD angle';
 end
 
-if voronoi_radius
+if voronoi_method
     methods = methods + 1;
     index_voronoi_vradius_max = methods;
     methods_name{index_voronoi_vradius_max} = 'VORONOI vmax';
@@ -206,20 +207,30 @@ if voronoi_radius
     methods_name{index_voronoi_sradius_angle} = 'VORONOI sangle';
 end
 
+%% include the custom variables
 importSysVar;
 
-urban = 1;
-suburban = 2;
-rural = 3;
-all = 4;
-area_type = all;
-
-% eliminat_by_method = index_voronoi_radius_mean;
-% eliminate_invalid_data = false;
+% urban = 1;
+% suburban = 2;
+% rural = 3;
+% all = 4;
+% area_type = all;
 
 subhead = {'(rogers all)'};
 
-cell_data = initialCellData(rogers, rogers_area_all);
+% initial the cell data
+% cell_data = initialCellData(rogers, rogers_area_all);
+load rogers_radius;
+
+radius_ready = false;
+
+if radius_ready
+    radius = [rogers_ta_radius, rogers_oh_radius, rogers_toh_radius, rogers_isd_radius, rogers_voro_radius];
+    drawAnalysisResult(radius, r_real_radius, methods_name, subhead);
+    return;
+end
+
+cell_data = rogers_cell;
 
 % [ m, 1]
 radius_inner = zeros(length(cell_data), 1);
@@ -263,12 +274,19 @@ for ii = 1:length(cell_data)
         r_cell_power = [r_cell_power; t_cell_power(ii, :)];
         r_cell_angle = [r_cell_angle; t_cell_angle(ii, :)];
         
-        if custom_radius
-            radius(ii, index_custom_radius) = str2double(cell_data{ii, CUSTOM_RADIUS});
+        idx_radius = length(r_real_radius);
+        if custom_method
+            cust_radius = str2double(cell_data{ii, CUSTOM_RADIUS});
+            
+            radius(idx_radius, index_custom_radius) =  cust_radius;
         end
         
-        if ta_radius
-            [radius_inner(ii), radius(ii, index_ta_radius)] = taAlgorithm(str2double(cell_data{ii, CELL_TALIM}));
+        if ta_method
+            
+            [ta_radius_inner, ta_radius_outer] = taAlgorithm(str2double(cell_data{ii, CELL_TALIM}));
+            
+            radius_inner(idx_radius) = ta_radius_inner;
+            radius(idx_radius, index_ta_radius) = ta_radius_outer;
         end
     end
     
@@ -279,8 +297,10 @@ end
 
 
 
-toh_model = [];
-if oh_model
+toh_model = [2.1904, 147.4491];
+% toh_model =
+%     2.1904  147.4491
+if oh_method
     
     oh_cell_power = r_cell_power;
     radius(:, index_oh_model) = ohPropagationAlgorithm(oh_cell_power(:, 1), oh_cell_power(:, 2));
@@ -292,29 +312,34 @@ if oh_model
 end
 
 % this is [m, 1]
-if isd_radius
-    isd_cell_enu_angle = [t_cell_enu, t_cell_angle, t_cell_power];
+if isd_method
+    isd_cell_enu_angle = [t_cell_enu, t_cell_angle, t_cell_power, t_real_radius];
     
     radiusISD = isdAlgorithm(isd_cell_enu_angle, ...
         ISD_NumberOfClosestCells, Adjustment_Clearance, toh_model);
     
-    radius(:, index_isd_max_radius:index_isd_angle_radius) = radiusISD(find(t_real_radius~=0), :);
+    radius(:, index_isd_max_radius:index_isd_angle_radius) = radiusISD;
 end
 
 % if isd_max_radius
 %     radius(:, index_isd_max_radius) = isdAlgorithm(cell_enu, ISD_NumberOfClosestCells, Adjustment_Clearance, ISD_MAX_WAY);
 % end
 
-if voronoi_radius
+if voronoi_method
         
-    v = VoronoiFortuneAlgo(t_cell_enu, 0.5);
-
-    v.do();
+    load rogers_voronoi;
+    
+    v = rogers_voro;
+%     v = VoronoiFortuneAlgo(t_cell_enu, 0.5);
+% 
+%     v.do();
     
     v_cell_enu_angle = [t_cell_enu, t_cell_angle, t_cell_power, t_real_radius];
     radius(:, index_voronoi_vradius_max:index_voronoi_sradius_angle) = v.calculateRadius(v_cell_enu_angle, Adjustment_Clearance, toh_model);
     
 end
+
+
 
 % stat_report = zeros(1, size(radius, 2));
 %     
@@ -429,25 +454,25 @@ end
 % radius = tmp_radius;
 % cell_power = tmp_cell_power;
 
-X = radius(:, index_oh_model:index_voronoi_sradius_angle);
-% power(10, (str2double(cell_data{ii, CELL_POWER}) ...
-%         + str2double(cell_data{ii, CELL_ACCMIN})+21-116)/35)
-% X(:, size(X, 2)+1) = power(10, (cell_power(:,1)+cell_power(:, 2)+21-116)/35);
-
-[b,se,pval,inmodel,stats,nextstep,history] = stepwisefit(X, r_real_radius, 'display', 'off');
-
-if find(inmodel>0)
-    methods = methods + 1;
-    index_regression = methods;
-    radius(:, index_regression) = stats.intercept;
-    methods_name{index_regression} = 'Regression';
-    for ii=1:length(inmodel)
-
-        if inmodel(ii)~=0
-            radius(:, index_regression) = radius(:, index_regression) + b(ii).*X(:, ii);
-        end
-    end
-end
+% X = radius(:, index_oh_model:index_voronoi_sradius_angle);
+% % power(10, (str2double(cell_data{ii, CELL_POWER}) ...
+% %         + str2double(cell_data{ii, CELL_ACCMIN})+21-116)/35)
+% % X(:, size(X, 2)+1) = power(10, (cell_power(:,1)+cell_power(:, 2)+21-116)/35);
+% 
+% [b,se,pval,inmodel,stats,nextstep,history] = stepwisefit(X, r_real_radius, 'display', 'off');
+% 
+% if find(inmodel>0)
+%     methods = methods + 1;
+%     index_regression = methods;
+%     radius(:, index_regression) = stats.intercept;
+%     methods_name{index_regression} = 'Regression';
+%     for ii=1:length(inmodel)
+% 
+%         if inmodel(ii)~=0
+%             radius(:, index_regression) = radius(:, index_regression) + b(ii).*X(:, ii);
+%         end
+%     end
+% end
 
 % if area_type==all %&& ~eliminate_invalid_data
 %     methods = methods + 1;
@@ -469,7 +494,7 @@ end
 %     end
 % end
 
-drawAnalysisResult;
+
 
 
 

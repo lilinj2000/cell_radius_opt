@@ -85,56 +85,31 @@ end
 
 % gsm_data = ImportGSMCellData(gsm_file);
 
-rogers_area_rural_orangeville = 1;
-rogers_area_suburban_brampton = 2;
-rogers_area_suburban_scarborough = 3;
-rogers_area_suburban = 4;
-rogers_area_urban_dt = 5;
-rogers_area_all = 6;
-
-turkey_beyoglu = 7;
-turkey_incek = 8;
-turkey_sariyer = 9;
-turkey_ulus = 10;
-turkey_uskudar = 11;
-turkey_all = 12;
-
-india_medium = 13;
-india_rural = 14;
-india_rural_highway = 15;
-india_all = 16;
-
-china_beijing = 17;
-china_wuxi = 18;
-
-
 switch data_area
-    case rogers_area_rural_orangeville
-    
-        %%%%%%%%%%%%%%Rogers Data%%%%%%%%%%%%%%%%%%%
-        % rural orange ville
-        gsm_data = rural_orangeville_cell;
-        gsm_tags = rural_orangeville_tags;
-
-    case rogers_area_suburban_brampton
-        % suburban brampton 
-        gsm_data = suburban_brampton_cell;
-        gsm_tags = suburban_brampton_tags;
-
-    case rogers_area_suburban_scarborough
-        % suburban scarborough
-        gsm_data = suburban_scarborough_cell;
-        gsm_tags = suburban_scarborough_tags;
-
-    case rogers_area_suburban
-        % suburan brampton + scarborough
-        gsm_data = [suburban_brampton_cell'; suburban_scarborough_cell'];
-        gsm_tags = [suburban_brampton_tags; suburban_scarborough_tags];
-
-    case rogers_area_urban_dt
-        % urban dt
-        gsm_data = urban_dt_cell;
-        gsm_tags = urban_dt_tags;
+%     case rogers_area_rural_orangeville
+% 
+%         gsm_data = rural_orangeville_cell;
+%         gsm_tags = rural_orangeville_tags;
+% 
+%     case rogers_area_suburban_brampton
+%  
+%         gsm_data = suburban_brampton_cell;
+%         gsm_tags = suburban_brampton_tags;
+% 
+%     case rogers_area_suburban_scarborough
+% 
+%         gsm_data = suburban_scarborough_cell;
+%         gsm_tags = suburban_scarborough_tags;
+% 
+%     case rogers_area_suburban
+%  
+%         gsm_data = [suburban_brampton_cell'; suburban_scarborough_cell'];
+%         gsm_tags = [suburban_brampton_tags; suburban_scarborough_tags];
+% 
+%     case rogers_area_urban_dt
+% 
+%         gsm_data = urban_dt_cell;
+%         gsm_tags = urban_dt_tags;
 
     case rogers_area_all
         % urban + suburban + rural
@@ -145,29 +120,27 @@ switch data_area
                     suburban_scarborough_tags; rural_orangeville_tags];
                 
     case turkey_beyoglu
-    %%%%%%%%%%%%Turkey Data%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % turkey beyoglu
+
     gsm_data = turkey_beyoglu_cell;
     gsm_tags = turkey_beyoglu_tags2;
 
     case turkey_incek
-    % turkey incek
     gsm_data = turkey_incek_cell;
     gsm_tags = turkey_incek_tags2;
 
 
     case turkey_sariyer
-    % % turkey sariyer
+
     gsm_data = turkey_sariyer_cell;
     gsm_tags = turkey_sariyer_tags2;
 
     case turkey_ulus
-    % % turkey ulus
+
     gsm_data = turkey_ulus_cell;
     gsm_tags = turkey_ulus_tags;
 
     case turkey_uskudar
-    % turkey uskudar
+
     gsm_data = turkey_uskudar_cell;
     gsm_tags = turkey_uskudar_tags2;
     

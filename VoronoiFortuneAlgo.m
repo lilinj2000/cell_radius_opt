@@ -6,15 +6,17 @@ classdef VoronoiFortuneAlgo < handle
         %site_points = struct([]);        % all of the site points
         
         site_points;
+        site_points_vec;
         axis_scaling = [];
         
         site_point_events = struct([]);  % the site point event queue by y- descend
         circle_events = struct([]);      % the circle event queue by y- descend
-        seg_list = struct([]);           % all of the edge list
+        seg_list = cell(0);              % all of the edge list {seg, p1, p2}
         arc_list = struct([]);           % all the beach lines 
         
-        edge_list = cell(0);            % store the site points => seg list
-        nbr_point_list = cell(0);       % store the site point of the neighbour points
+        result_info = struct([]); % .segs, .vertexs, nbrs
+%         edge_list = cell(0);            % store the site points => seg list
+%         nbr_point_list = cell(0);       % store the site point of the neighbour points
                                         %               point => point list
         log = log4m.getLogger('voronoi.log');
     end
@@ -26,7 +28,7 @@ classdef VoronoiFortuneAlgo < handle
         function VFA = VoronoiFortuneAlgo(site_points, axis_ratio)
             
             VFA.log.setCommandWindowLevel(VFA.log.OFF);
-            VFA.log.setLogLevel(VFA.log.ALL);
+            VFA.log.setLogLevel(VFA.log.INFO);
             
             [site_points_sort, I, ~] = unique(site_points, 'rows', 'first');
             [~, I] = sort(I);
@@ -38,6 +40,8 @@ classdef VoronoiFortuneAlgo < handle
             end
             
             % init the array
+            VFA.site_points_vec = site_ponits;
+            
             VFA.site_points(size(site_points,1)).x = [];
             VFA.site_points(size(site_points,1)).y = [];
             for ii = 1:size(site_points,1)
@@ -72,7 +76,7 @@ classdef VoronoiFortuneAlgo < handle
             % gen site point events
             VFA.site_point_events = VFA.site_points(idx);
             
-            VFA.log.trace('do()', 'VFA start do ... ');
+            VFA.log.info('do()', 'VFA start do ... ');
             
             % go through all the site events
             while ~isempty(VFA.site_point_events)
@@ -83,17 +87,19 @@ classdef VoronoiFortuneAlgo < handle
                        %VFA.showFigure(VFA.circle_events(1).y, VFA.circle_events(1));
                        %waitforbuttonpress;
                        
+                       VFA.log.info('do()', strcat('VFA do in loop - circle events : ', num2str(length(VFA.circle_events))));
+                       
                        % on circle event
                        VFA.onCircleEvent(VFA.circle_events(1));
                        
-                       VFA.log.trace('do()', strcat('VFA do in loop - circle events : ', num2str(length(VFA.circle_events))));
+                       
                     else
                        break;
                     end
                 end
                 
-                VFA.log.trace('do()', strcat('VFA do break loop - circle events : ', num2str(length(VFA.circle_events))));
-    
+                VFA.log.info('do()', strcat('VFA do site events : ', num2str(length(VFA.site_point_events))));
+                 
                 % on site event
                 VFA.onSiteEvent(VFA.site_point_events(1));
                 
@@ -102,8 +108,7 @@ classdef VoronoiFortuneAlgo < handle
                 
                 % remove the site point event
                 VFA.site_point_events(1) = [];
-                
-                VFA.log.trace('do()', strcat('VFA do site events : ', num2str(length(VFA.site_point_events))));
+              
             end
             
             % handle the left circle events
@@ -112,20 +117,22 @@ classdef VoronoiFortuneAlgo < handle
                 %VFA.showFigure(VFA.circle_events(1).y, VFA.circle_events(1));
                 %waitforbuttonpress;
                
+                VFA.log.info('do()', strcat('VFA do in the left circle events loop : ', num2str(length(VFA.circle_events))));
+                
                 % handle circle event
                VFA.onCircleEvent(VFA.circle_events(1)); 
                
-               VFA.log.trace('do()', strcat('VFA do in the left circle events loop : ', num2str(length(VFA.circle_events))));
-    
             end
 
             % finish all the left arc list
+            VFA.log.info('do()', strcat('finish the left arc list ', num2str(length(VFA.arc_list))));
             VFA.finishLeftArcList();
             
-            VFA.showFigure([], []);
+%             VFA.log.info('do()', 'show figure ... ');
+%             VFA.showFigure([], []);
             %waitforbuttonpress;
             
-            VFA.log.trace('do()', 'VFA end do ... ');
+            VFA.log.info('do()', 'VFA done. ');
         end
         
         function onSiteEvent(VFA, p)
@@ -202,6 +209,7 @@ classdef VoronoiFortuneAlgo < handle
 
             % attentions: the false alarm for the circle events must be removed before
             % the seg change
+            tic;
             if index-1>0
                 % remove the false alarm of the circle events for the prev
                 c1 = VFA.arc_list(index-1).circle_event;
@@ -212,7 +220,9 @@ classdef VoronoiFortuneAlgo < handle
                 % update the seg1 prev arc
                 VFA.arc_list(index-1).seg1.start_p = c.center;
             end
+            VFA.log.debug('onCircleEvent()', ['remove the prev flase alarm. ', num2str(toc)]);
 
+            tic;
             if index+1<=length(VFA.arc_list)
                 % remove the false alarm of the circle events for the prev
                 c2 = VFA.arc_list(index+1).circle_event;
@@ -223,24 +233,36 @@ classdef VoronoiFortuneAlgo < handle
                 % update the post arc
                 VFA.arc_list(index+1).seg0.start_p = c.center;
             end
+            VFA.log.debug('onCircleEvent()', ['remove the post flase alarm. ', num2str(toc)]);
 
             % remove the current circle events from list 
+            tic;
             VFA.removeCircleEvent(c);
-
+            VFA.log.debug('onCircleEvent()', ['remove the current circle event. ', num2str(toc)]);
+            
             % update the arc
+            tic;
             VFA.arc_list(index).seg0.end_p = c.center;
             VFA.arc_list(index).seg1.end_p = c.center;
 
             VFA.pushSeg(VFA.arc_list(index).seg0, VFA.arc_list(index-1).p, VFA.arc_list(index).p);
             VFA.pushSeg(VFA.arc_list(index).seg1, VFA.arc_list(index).p, VFA.arc_list(index+1).p);
-
+            VFA.log.debug('onCircleEvent()', ['update arc info. ', num2str(toc)]);
+            
             % remove the arc from list
             VFA.arc_list(index) = [];
 
             % the index point to the post arc now
             % check & update the prev & post arc circle event
+            tic;
             VFA.updateCircleEvent(index-1);
+            
+            VFA.log.debug('onCircleEvent()', ['update prev circle event. ', num2str(toc)]);
+            
+            tic;
             VFA.updateCircleEvent(index);
+            
+            VFA.log.debug('onCircleEvent()', ['update post circle event. ', num2str(toc)]);
         end
         
         function updateCircleEvent(VFA, index)
@@ -347,6 +369,8 @@ classdef VoronoiFortuneAlgo < handle
                 - (VFA.axis_scaling.ymax-VFA.axis_scaling.ymin).*2;
             
             while ~isempty(VFA.arc_list)
+                VFA.log.info('finishLeftArcList()', strcat('finish the left arc list ', num2str(length(VFA.arc_list))));
+                
                 if ~isempty(VFA.arc_list(1).seg1)
                     node = VoronoiFortuneAlgo.intersection(VFA.arc_list(1).p, VFA.arc_list(2).p, y);
 
@@ -363,75 +387,189 @@ classdef VoronoiFortuneAlgo < handle
         function pushSeg(VFA, seg, p1, p2)
 
             % store the seg in seg list
-            if isempty(VFA.seg_list)
-                VFA.seg_list = seg;
-            else
-                VFA.seg_list(length(VFA.seg_list)+1) = seg;
-            end
+            VFA.seg_list{length(VFA.seg_list)+1} = {seg, p1, p2};
             
-            VFA.pushEdge(seg, p1);
-            VFA.pushEdge(seg, p2);
+%             tic;
+%             if isempty(VFA.seg_list)
+%                 VFA.seg_list = seg;
+%             else
+%                 VFA.seg_list(length(VFA.seg_list)+1) = seg;
+%             end
+%             VFA.log.debug('pushSeg()', ['push seg to list. ', num2str(toc)]);
             
-            VFA.pushNbrPoint(p1, p2);
-            VFA.pushNbrPoint(p2, p1);
+%             tic;
+%             VFA.pushEdge(seg, p1);
+%             VFA.pushEdge(seg, p2);
+%             VFA.log.debug('pushSeg()', ['push seg to edge list. ', num2str(toc)]);
+%             
+%             tic;
+%             VFA.pushNbrPoint(p1, p2);
+%             VFA.pushNbrPoint(p2, p1);
+%             VFA.log.debug('pushSeg()', ['push to nbr list. ', num2str(toc)]);
                         
         end
         
-        function pushEdge(VFA, seg, p)
-            
-            index = VFA.findEdgeList(p);
-            if index~=0
-                VFA.edge_list{index, 2} = [VFA.edge_list{index, 2}; seg];
-            else
-                index = size(VFA.edge_list, 1)+1;
+        function uniqueNbrPoints(VFA)
+        
+            for ii=1:length(VFA.result_info)
                 
-                VFA.edge_list{index, 1} = p;
-                VFA.edge_list{index, 2} = seg;
-            end
-        end
-        
-        function index = findEdgeList(VFA, p)
-            index = 0;
-            
-            if isempty(VFA.edge_list)
-                return ;
-            end
-            
-            for ii = 1 : size(VFA.edge_list, 1)
-                if VFA.edge_list{ii, 1}.x==p.x && VFA.edge_list{ii, 1}.y==p.y
-                    index = ii;
-                    return ;
-                end
-            end
-        end
-        
-        function pushNbrPoint(VFA, p, NbrPoint)
-            
-            index = VFA.findNbrPointList(p);
-            if index~=0
-                VFA.nbr_point_list{index, 2} = [VFA.nbr_point_list{index, 2}; NbrPoint];
-            else
-                index = size(VFA.nbr_point_list, 1)+1;
+                VFA.log.info('uniqueNbrPoints()', ['index is ', num2str(ii)]);
                 
-                VFA.nbr_point_list{index, 1} = p;
-                VFA.nbr_point_list{index, 2} = NbrPoint;
+                nbr_points = VFA.result_info(ii).nbr_points;
+                
+                VFA.result_info(ii).nbr_points = unique(nbr_points, 'rows');
             end
         end
         
-        function index = findNbrPointList(VFA, p)
-            index = 0;
+        function [segs, vertexs, nbr_points] = findResultInfo(VFA, cell_enu)
+            p_loc = find(ismember(VFA.site_points_vec, cell_enu, 'rows')>0);
             
-            if isempty(VFA.nbr_point_list)
-                return ;
-            end
-            
-            for ii = 1 : size(VFA.nbr_point_list, 1)
-                if VFA.nbr_point_list{ii, 1}.x==p.x && VFA.nbr_point_list{ii, 1}.y==p.y
-                    index = ii;
-                    return ;
-                end
+            if p_loc~=0
+                segs = VFA.result_info(p_loc).segs;
+                vertexs = VFA.result_info(p_loc).vertexs;
+                nbr_points = VFA.result_info(p_loc).nbr_points;
+            else
+                error('can''t find the result info for this point.');
             end
         end
+        
+        function splitSegList(VFA)
+%            VFA.result_info;
+            % seg_list {seg, p1, p2}
+            
+%             site_points_cell = arrayfun(@(p) [p.x, p.y], VFA.site_points, 'Uniformoutput', false);
+%             site_points_vec = cell2mat(site_points_cell');
+            
+%             N = length(site_pints_vec);    
+            VFA.result_info = repmat(struct('site_point', [], 'segs', [], 'vertexs', [], 'nbr_points', []), length(VFA.site_points), 1 );
+            
+%             idx_site = find(ismember(site_pionts_vec, p)>0);
+            
+            idx_seg = 1;
+            idx_p1 = 2;
+            idx_p2 = 3;
+            
+%             p_segs = VFA.seg_list(:, idx_seg);
+%             p1_cell = VFA.seg_list(:, idx_p1);
+%             p2_cell = VFA.seg_list(:, idx_p2);
+            
+           for ii=1:length(VFA.seg_list)
+               
+               VFA.log.info('splitSegList()', ['index is ', num2str(ii)]);
+               
+                p1 = VFA.seg_list{ii}{idx_p1};
+                p2 = VFA.seg_list{ii}{idx_p2};
+                seg = VFA.seg_list{ii}{idx_seg};
+                
+                p1_vec = [p1.x, p1.y];
+                p2_vec = [p2.x, p2.y];
+                vertex1 = [seg.start_p.x, seg.start_p.y];
+                vertex2 = [seg.end_p.x, seg.end_p.y];
+                
+                
+                p1_loc = find(ismember(VFA.site_points_vec, p1_vec, 'rows')>0);
+                p2_loc = find(ismember(VFA.site_points_vec, p2_vec, 'rows')>0);
+                
+                if isempty(VFA.result_info(p1_loc).site_point)
+                    VFA.result_info(p1_loc).site_point = p1;
+                    VFA.result_info(p1_loc).segs = seg;
+                else
+                    VFA.result_info(p1_loc).segs(length(VFA.result_info(p1_loc).segs)+1) = seg;
+                end
+                
+                if isempty(VFA.result_info(p2_loc).site_point)
+                    VFA.result_info(p2_loc).site_point = p2;
+                    VFA.result_info(p2_loc).segs = seg;
+                else
+                    VFA.result_info(p2_loc).segs(length(VFA.result_info(p2_loc).segs)+1) = seg;
+                end
+                
+
+                if  ~any(ismember(VFA.result_info(p1_loc).vertexs, vertex1, 'rows'))
+                    VFA.result_info(p1_loc).vertexs(size(VFA.result_info(p1_loc).vertexs, 1) +1, :) = vertex1;
+                end
+                
+                if  ~any(ismember(VFA.result_info(p1_loc).vertexs, vertex2, 'rows'))
+                    VFA.result_info(p1_loc).vertexs(size(VFA.result_info(p1_loc).vertexs, 1) +1, :) = vertex2;
+                end
+                
+                if ~any(ismember(VFA.result_info(p1_loc).nbr_points, p2_vec, 'rows'))
+                    VFA.result_info(p1_loc).nbr_points(size(VFA.result_info(p1_loc).nbr_points, 1)+1, :) = p2_vec;
+                end
+                
+               
+                if  ~any(ismember(VFA.result_info(p2_loc).vertexs, vertex1, 'rows'))
+                    VFA.result_info(p2_loc).vertexs(size(VFA.result_info(p2_loc).vertexs, 1)+1, :) = vertex1;
+                end
+                
+                if  ~any(ismember(VFA.result_info(p2_loc).vertexs, vertex2, 'rows'))
+                    VFA.result_info(p2_loc).vertexs(size(VFA.result_info(p2_loc).vertexs, 1)+1, :) = vertex2;
+                end
+                
+                if ~any(ismember(VFA.result_info(p2_loc).nbr_points, p1_vec, 'rows'))
+                    VFA.result_info(p2_loc).nbr_points(size(VFA.result_info(p2_loc).nbr_points, 1)+1, :) = p1_vec;
+                end
+                
+           end
+           
+           
+        end
+        
+%         function pushEdge(VFA, seg, p)
+%             
+%             index = VFA.findEdgeList(p);
+%             if index~=0
+%                 VFA.edge_list{index, 2}(size(VFA.edge_list{index, 2},1)) = seg;
+%             else
+%                 index = size(VFA.edge_list, 1)+1;
+%                 
+%                 VFA.edge_list{index, 1} = p;
+%                 VFA.edge_list{index, 2} = seg;
+%             end
+%         end
+%         
+%         function index = findEdgeList(VFA, p)
+%             index = 0;
+%             
+%             if isempty(VFA.edge_list)
+%                 return ;
+%             end
+%             
+%             for ii = 1 : size(VFA.edge_list, 1)
+%                 if VFA.edge_list{ii, 1}.x==p.x && VFA.edge_list{ii, 1}.y==p.y
+%                     index = ii;
+%                     return ;
+%                 end
+%             end
+%         end
+%         
+%         function pushNbrPoint(VFA, p, NbrPoint)
+%             
+%             index = VFA.findNbrPointList(p);
+%             if index~=0
+%                 VFA.nbr_point_list{index, 2}(size(VFA.nbr_point_list{index, 2}, 1)) = NbrPoint;
+%             else
+%                 index = size(VFA.nbr_point_list, 1)+1;
+%                 
+%                 VFA.nbr_point_list{index, 1} = p;
+%                 VFA.nbr_point_list{index, 2} = NbrPoint;
+%             end
+%         end
+%         
+%         function index = findNbrPointList(VFA, p)
+%             index = 0;
+%             
+%             if isempty(VFA.nbr_point_list)
+%                 return ;
+%             end
+%             
+%             for ii = 1 : size(VFA.nbr_point_list, 1)
+%                 if VFA.nbr_point_list{ii, 1}.x==p.x && VFA.nbr_point_list{ii, 1}.y==p.y
+%                     index = ii;
+%                     return ;
+%                 end
+%             end
+%         end
         
         % way: 1 - max value; 2 - mean value; 3 - min value 
         %      4 - ISD mean;  5 - ISD max;
@@ -464,9 +602,14 @@ classdef VoronoiFortuneAlgo < handle
            
            radius = [];
            
+           
+           
             for ii=1:length(cell_enu_angle_radius)
-            
+                
                 if cell_enu_angle_radius(ii, idx_dist)~=0
+                    
+                   VFA.log.info('calculateRadius()', ['index is ', num2str(ii)]);
+                    
                     p.x = cell_enu_angle_radius(ii, idx_lat);
                     p.y = cell_enu_angle_radius(ii, idx_long);
                     
@@ -477,7 +620,7 @@ classdef VoronoiFortuneAlgo < handle
                     
                     sradius = VFA.computeSRadius(p, cell_angle, cell_power, cell_enu_angle_radius, isd_clearance, max_radius, min_radius, toh_model);
                     
-                    radius = [radius; vradius, sradius];
+                    radius(size(radius, 1)+1, :) = [vradius, sradius];
                 end
                 
             end
@@ -492,19 +635,27 @@ classdef VoronoiFortuneAlgo < handle
             ymax = VFA.axis_scaling.ymax;
             
             radius = [];
+            
+            p_vec = [p.x, p.y];
+           
+            p_loc = find(ismember(VFA.site_points_vec, p_vec, 'rows')>0);
   
             % compute the radius with vertex points
-            index = VFA.findEdgeList(p);
+%             index = VFA.findEdgeList(p);
             
-            if index~=0
+            if p_loc~=0
                 dist = [];
                 dist_angle = [];
                 
                 bAngleFound = 0;
                 
-                for jj = 1 : length(VFA.edge_list{index, 2})
+                for jj = 1 : size(VFA.result_info(p_loc).vertexs, 1)
                     
-                    point = VFA.edge_list{index,2}(jj,1).end_p;
+                    vertex = VFA.result_info(p_loc).vertexs(jj, :);
+                    
+                    point.x = vertex(1, 1);
+                    point.y = vertex(1, 2);
+                    
                     if point.x<xmin || point.x>xmax ...
                             || point.y<ymin || point.y>ymax
                         
@@ -517,8 +668,10 @@ classdef VoronoiFortuneAlgo < handle
                         distance = max_radius;
                     end
                    
+                    bFound = false;
                     if inArcDirection(p, cell_angle, point)
                         bAngleFound = 1;
+                        bFound = true;
                     end
                     
                     if distance<isd_clearance
@@ -526,7 +679,10 @@ classdef VoronoiFortuneAlgo < handle
                     end
                     
                     dist = [dist; distance];
-                    dist_angle = [dist_angle; distance];
+                    
+                    if bFound
+                        dist_angle = [dist_angle; distance];
+                    end
                 end
 
                 if ~isempty(dist)
@@ -539,14 +695,14 @@ classdef VoronoiFortuneAlgo < handle
                 
                 if ~isempty(dist_angle)
                     vradiusAngle = min(dist_angle);
-                elseif bAngleFoud
+                elseif bAngleFound
                     vradiusAngle = min_radius;
                 else % tohmodel
-                    vradiusAngle = tohFunc(cell_power, toh_model);
+                    vradiusAngle = VFA.tohFunc(cell_power, toh_model);
                 end
             else
                 VFA.log.error('computeVRadius()', strcat('error data. (x,y) - (', num2str(p.x), ',', num2str(p.y), ')'));                
-                [vradiusMax, vradiusMean, vradiusMin, vradiusAngle] = tohFunc(cell_power, toh_model);
+                [vradiusMax, vradiusMean, vradiusMin, vradiusAngle] = VFA.tohFunc(cell_power, toh_model);
             end
                 
             radius = [vradiusMax, vradiusMean, vradiusMin, vradiusAngle];
@@ -563,15 +719,23 @@ classdef VoronoiFortuneAlgo < handle
             idx_accmin = 6;
             idx_dist = 7;
             
+            p_vec = [p.x, p.y];
+           
+            p_loc = find(ismember(VFA.site_points_vec, p_vec, 'rows')>0);
+            
             % compute the rdius with the neighbour site points
-            index = VFA.findNbrPointList(p);
-            if index~=0
+%             index = VFA.findNbrPointList(p);
+            if p_loc~=0
                 dist = [];
                 dist_angle = [];
                 bAngleFound = 0;
-                for jj = 1 : length(VFA.nbr_point_list{index, 2})
+                for jj = 1 : size(VFA.result_info(p_loc).nbr_points, 1)
                     
-                    point = VFA.nbr_point_list{index,2}(jj,1);
+                    nbr_point = VFA.result_info(p_loc).nbr_points(jj, :);
+                    point.x = nbr_point(1, 1);
+                    point.y = nbr_point(1, 2);
+                    
+%                     point = VFA.nbr_point_list{index,2}(jj,1);
                     
                     distance = VFA.distance(p, point);
                     
@@ -580,14 +744,13 @@ classdef VoronoiFortuneAlgo < handle
                     end
                     
                     
-                    
                     bFound = 0;
                     
                     if inArcDirection(p, cell_angle, point)
                         
                         bAngleFound = 1;
                         bFound = 1;
-                        for kk=1:length(cell_enu_angle_radius)
+                        for kk=1:size(cell_enu_angle_radius, 1)
                             if cell_enu_angle_radius(kk, idx_lat)==point.x ...
                                     && cell_enu_angle_radius(kk, idx_long)==point.y
                                 if inArcDirection(point, cell_enu_angle_radius(kk, idx_start_angle:idx_stop_angle), p)
@@ -623,7 +786,7 @@ classdef VoronoiFortuneAlgo < handle
                 if ~isempty(dist_angle)
                     sradiusAngle = min(dist_angle);
                 elseif bAngleFound
-                    sradiusAngle = min_radius
+                    sradiusAngle = min_radius;
                 else %toh
                     sradiusAngle = VFA.tohFunc(cell_power, toh_model);
                 end
@@ -718,10 +881,11 @@ classdef VoronoiFortuneAlgo < handle
             % plot the segments
             for ii = 1 : length(VFA.seg_list)
                 % plot the start & end point
-                % plot(VFA.seg_list(ii).start_p.x, VFA.seg_list(ii).start_p.y, 'ro');
-                plot(VFA.seg_list(ii).end_p.x, VFA.seg_list(ii).end_p.y, 'r^');
+                % plot(VFA.seg_list(ii).start_p.x,
+                % VFA.seg_list(ii).start_p.y, 'ro');
+                plot(VFA.seg_list{ii}{1}.end_p.x, VFA.seg_list{ii}{1}.end_p.y, 'r^');
 
-                VoronoiFortuneAlgo.drawLine(VFA.seg_list(ii).start_p, VFA.seg_list(ii).end_p, 'r-');
+                VoronoiFortuneAlgo.drawLine(VFA.seg_list{ii}{1}.start_p, VFA.seg_list{ii}{1}.end_p, 'r-');
             end
 
             % set the x- and y- axes
@@ -813,57 +977,60 @@ classdef VoronoiFortuneAlgo < handle
         end
         
         function ok = equalArc(arc1, arc2)
-            ok = 0;
+%             ok = 0;
 
-            if isempty(arc1) || isempty(arc2)
-                return;
-            end
-
-            p_ok = 0;
-
-            p1 = arc1.p;
-            p2 = arc2.p;
-
-            if p1.x==p2.x && p1.y==p2.y
-                p_ok = 1;
-            end
-
-            seg0_ok =0;
-
-            % both of the seg0 is empty
-            if isempty(arc1.seg0) && isempty(arc2.seg0) 
-                seg0_ok = 1;
-            end
-
-            % both of the seg0 is not empty
-            if ~isempty(arc1.seg0) && ~isempty(arc2.seg0) 
-                start_p1 = arc1.seg0.start_p;
-                start_p2 = arc2.seg0.start_p;
-                % the start point equal
-                if start_p1.x==start_p2.x && start_p1.y==start_p2.y
-                    seg0_ok = 1;
-                end
-            end
-    
-    
-            seg1_ok = 0;
-            if (isempty(arc1.seg1) && isempty(arc2.seg1))
-                seg1_ok = 1;
-            end
-
-            if ~isempty(arc1.seg1) && ~isempty(arc2.seg1) 
-                start_p1 = arc1.seg1.start_p;
-                start_p2 = arc2.seg1.start_p;
-
-                if start_p1.x==start_p2.x && start_p1.y==start_p2.y
-                    seg1_ok = 1;
-                end
-            end
-
-
-            if p_ok && seg0_ok && seg1_ok
-                ok = 1;
-            end
+            ok = isequal(arc1.p, arc2.p) && isequal(arc1.seg0, arc1.seg0) ...
+                && isequal(arc1.seg1, arc2.seg1);
+            
+%             if isempty(arc1) || isempty(arc2)
+%                 return;
+%             end
+% 
+%             p_ok = 0;
+% 
+%             p1 = arc1.p;
+%             p2 = arc2.p;
+% 
+%             if p1.x==p2.x && p1.y==p2.y
+%                 p_ok = 1;
+%             end
+% 
+%             seg0_ok =0;
+% 
+%             % both of the seg0 is empty
+%             if isempty(arc1.seg0) && isempty(arc2.seg0) 
+%                 seg0_ok = 1;
+%             end
+% 
+%             % both of the seg0 is not empty
+%             if ~isempty(arc1.seg0) && ~isempty(arc2.seg0) 
+%                 start_p1 = arc1.seg0.start_p;
+%                 start_p2 = arc2.seg0.start_p;
+%                 % the start point equal
+%                 if start_p1.x==start_p2.x && start_p1.y==start_p2.y
+%                     seg0_ok = 1;
+%                 end
+%             end
+%     
+%     
+%             seg1_ok = 0;
+%             if (isempty(arc1.seg1) && isempty(arc2.seg1))
+%                 seg1_ok = 1;
+%             end
+% 
+%             if ~isempty(arc1.seg1) && ~isempty(arc2.seg1) 
+%                 start_p1 = arc1.seg1.start_p;
+%                 start_p2 = arc2.seg1.start_p;
+% 
+%                 if start_p1.x==start_p2.x && start_p1.y==start_p2.y
+%                     seg1_ok = 1;
+%                 end
+%             end
+% 
+% 
+%             if p_ok && seg0_ok && seg1_ok
+%                 ok = 1;
+%             end
         end
         
         function ok = equalCircleEvent(c1, c2)
@@ -874,9 +1041,8 @@ classdef VoronoiFortuneAlgo < handle
                 return ;
             end
 
-            if VoronoiFortuneAlgo.equalArc(c1.arc, c2.arc)
-                ok = 1;
-            end
+            ok = VoronoiFortuneAlgo.equalArc(c1.arc, c2.arc);
+            
         end
         
         function drawParabola(p, line, xmin, xmax)

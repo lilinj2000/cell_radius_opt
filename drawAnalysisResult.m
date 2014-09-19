@@ -1,24 +1,30 @@
 
-pie_legend = {'10%', '20%', '30%', '50%', 'other'};
+function drawAnalysisResult(radius, real_radius, methods_name, subhead)
+
+pie_legend = {'10%', '20%', '30%', '50%', '>50%'};
 M = [0.05, 0.15, 0.25, 0.35, 0.65];
 
-switch area_type
-    case urban
-        pie_legend2 = {'50', '100', '200', '300', '500', '>500'};
-        M2 = [25, 75, 125, 275, 325, 675];
+
+pie_legend2 = {'500', '1000', '3000', '6000', '10000', '>10000'};
+M2 = [250, 750, 1250, 4750, 7250, 12750];
         
-    case {suburban, rural, all}
-        pie_legend2 = {'500', '1000', '3000', '6000', '10000', '>10000'};
-        M2 = [250, 750, 1250, 4750, 7250, 12750];
-        
-%         pie_legend2 = {'500', '1000', '2000', '4000', '6000', '8000', '10000', '>10000'};
-%         M2 = [250, 750, 1250, 2750, 5250, 6750, 9250, 10750];
-        
-        % pie_legend = {'500', '1000', '3000', '10000', '20000', 'other'};
-        % M = [250, 750, 1250, 4750, 15250, 24750];
-%         pie_legend2 = {'500', '3000', '10000', 'other'};
-%         M2 = [250, 750, 5250, 14750];
-end
+% switch area_type
+%     case urban
+%         pie_legend2 = {'50', '100', '200', '300', '500', '>500'};
+%         M2 = [25, 75, 125, 275, 325, 675];
+%         
+%     case {suburban, rural, all}
+%         pie_legend2 = {'500', '1000', '3000', '6000', '10000', '>10000'};
+%         M2 = [250, 750, 1250, 4750, 7250, 12750];
+%         
+% %         pie_legend2 = {'500', '1000', '2000', '4000', '6000', '8000', '10000', '>10000'};
+% %         M2 = [250, 750, 1250, 2750, 5250, 6750, 9250, 10750];
+%         
+%         % pie_legend = {'500', '1000', '3000', '10000', '20000', 'other'};
+%         % M = [250, 750, 1250, 4750, 15250, 24750];
+% %         pie_legend2 = {'500', '3000', '10000', 'other'};
+% %         M2 = [250, 750, 5250, 14750];
+% end
 
 abs_radius_compare = [];
 per_radius_compare = [];
@@ -26,7 +32,7 @@ per_radius_compare = [];
 for ii = 1 : size(radius, 2)
     pie_title = vertcat(methods_name{ii}, subhead);
     
-    relative_radius(:, ii) = radius(:, ii) - r_real_radius;
+    relative_radius(:, ii) = radius(:, ii) - real_radius;
     
     abs_radius_compare(:, ii) = drawPie(abs(relative_radius(:, ii)), M2, pie_legend2, pie_title);
     
@@ -40,7 +46,7 @@ for ii = 1 : size(radius, 2)
 %     legend(methods_name{ii});
 %     
 
-    relative_radius_percent = abs(relative_radius(:, ii))./r_real_radius;
+    relative_radius_percent = abs(relative_radius(:, ii))./real_radius;
     
     
     per_radius_compare(:, ii) = drawPie(relative_radius_percent, M, pie_legend, pie_title);
@@ -77,9 +83,9 @@ end
 % end
 
 % caluculate the similar value
-similar = [size(radius, 2), 1];
+similar = zeros(size(radius, 2), 1);
 for ii = 1 : size(radius, 2)
-    similar(ii) = similarAlgorithm(r_real_radius, radius(:, ii));
+    similar(ii) = similarAlgorithm(real_radius, radius(:, ii));
 end
 
 % the real readius
@@ -119,6 +125,11 @@ set(gca, 'xticklabel', pie_legend);
 title({'radius compare'});
 legend(methods_name, 'Location','EastOutside');
 grid on;
+
+
+abs_radius_compare'
+per_radius_compare'
+similar
 
 % similar
 % b'
@@ -193,3 +204,5 @@ grid on;
 % end
 % hold off;
 % axis equal;
+
+end

@@ -47,8 +47,8 @@ if isempty(toh_model)
     
     log = log4m.getLogger('toh.log');
     log.setLogLevel(log.ALL);
-    log.info('tohPropagationAlgorithm()', strcat('A is ', num2str(A)));
-    log.info('tohPropagationAlgorithm()', strcat('B is ', num2str(B)));
+    log.info('tohPropagationAlgorithm()', ['A is ', num2str(A)]);
+    log.info('tohPropagationAlgorithm()', ['B is ', num2str(B)]);
     
 else
     A = toh_model(idx_A);
