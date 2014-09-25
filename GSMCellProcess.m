@@ -102,14 +102,11 @@ ISD_GeographicalDistanceRatio = 0.7;
 
 %% Algorithm Method Selection
 
-false = 0;
-true = 1;
-
 custom_method = false;
 ta_method = false;
 oh_method = false;
-isd_method = true;
-voronoi_method = false;
+isd_method = false;
+voronoi_method = true;
 
 methods = 0;
 index_custom_radius = 0;
@@ -216,21 +213,27 @@ importSysVar;
 % all = 4;
 % area_type = all;
 
-subhead = {'(rogers all)'};
+subhead = {'(china beijing all)'};
+
+skip_power = true;
+skip_angle = true;
 
 % initial the cell data
-% cell_data = initialCellData(rogers, rogers_area_all);
-load rogers_radius;
+% cell_data = initialCellData(india, india_all);
+% load rogers_radius;
+% load turkey_radius;
+load beijing_radius;
 
 radius_ready = false;
 
 if radius_ready
-    radius = [rogers_ta_radius, rogers_oh_radius, rogers_toh_radius, rogers_isd_radius, rogers_voro_radius];
+%     radius = [rogers_ta_radius, rogers_oh_radius, rogers_toh_radius, rogers_isd_radius, rogers_voro_radius];
+    radius = [turkey_ta_radius, turkey_oh_radius, turkey_toh_radius, turkey_isd_radius, turkey_voro_radius];
     drawAnalysisResult(radius, r_real_radius, methods_name, subhead);
     return;
 end
 
-cell_data = rogers_cell;
+cell_data = beijing_cell;
 
 % [ m, 1]
 radius_inner = zeros(length(cell_data), 1);
@@ -242,15 +245,17 @@ radius_outer = radius_inner;
 % m means cell number, n means methods number
 radius = [];
 
-taLimStep = 120000/219; % 547.9425
+% taLimStep = 120000/219; % 547.9425
 
 % store the cell characteristic
-cell_enu = [];
+t_lac_ci = cell(0);
+t_cell_enu = [];
 
 t_real_radius = [];
 t_cell_power = [];
 t_cell_angle = [];
 
+r_lac_ci = cell(0);
 r_cell_enu = [];
 r_real_radius = [];
 r_cell_power = [];
@@ -259,20 +264,34 @@ r_cell_angle = [];
 
 for ii = 1:length(cell_data)
     
-
+    t_lac_ci(ii, 1) = cellstr(cell_data{ii, LAC_CI});
     t_cell_enu(ii, :) = cell_data{ii, LAT_LONG}; 
     t_real_radius(ii, 1) = cell_data{ii, REAL_RADIUS};
-    t_cell_power(ii, 1) = str2double(cell_data{ii, CELL_POWER});
-    t_cell_power(ii, 2) = str2double(cell_data{ii, CELL_ACCMIN});
     
-    t_cell_angle(ii, :) = cell_data{ii, CELL_ANGLE};
+    if ~skip_power
+        t_cell_power(ii, 1) = str2double(cell_data{ii, CELL_POWER});
+        t_cell_power(ii, 2) = str2double(cell_data{ii, CELL_ACCMIN});
+    end
+   
+    
+   if ~skip_angle
+        t_cell_angle(ii, :) = cell_data{ii, CELL_ANGLE};
+   end
+    
     
     if t_real_radius(ii)~=0
         
+        r_lac_ci = [r_lac_ci; cellstr(t_lac_ci(ii, :))];
         r_cell_enu = [r_cell_enu; t_cell_enu(ii, :)];
         r_real_radius = [r_real_radius; t_real_radius(ii)];
-        r_cell_power = [r_cell_power; t_cell_power(ii, :)];
-        r_cell_angle = [r_cell_angle; t_cell_angle(ii, :)];
+        
+        if ~skip_power
+            r_cell_power = [r_cell_power; t_cell_power(ii, :)];
+        end
+        
+        if ~skip_angle
+            r_cell_angle = [r_cell_angle; t_cell_angle(ii, :)];
+        end
         
         idx_radius = length(r_real_radius);
         if custom_method
@@ -297,9 +316,11 @@ end
 
 
 
-toh_model = [2.1904, 147.4491];
+% toh_model = [0.1043, 150.1801];
 % toh_model =
-%     2.1904  147.4491
+% 
+%     0.1043  150.1801
+toh_model = [];
 if oh_method
     
     oh_cell_power = r_cell_power;
@@ -313,9 +334,9 @@ end
 
 % this is [m, 1]
 if isd_method
-    isd_cell_enu_angle = [t_cell_enu, t_cell_angle, t_cell_power, t_real_radius];
+%     isd_cell_enu_angle = [t_cell_enu, t_cell_angle, t_cell_power, t_real_radius];
     
-    radiusISD = isdAlgorithm(isd_cell_enu_angle, ...
+    radiusISD = isdAlgorithm(t_cell_enu, t_cell_angle, t_cell_power, t_real_radius, ...
         ISD_NumberOfClosestCells, Adjustment_Clearance, toh_model);
     
     radius(:, index_isd_max_radius:index_isd_angle_radius) = radiusISD;
@@ -327,15 +348,17 @@ end
 
 if voronoi_method
         
-    load rogers_voronoi;
+%     load india_voronoi;
+%     
+%     v = india_voro;
+    v = VoronoiFortuneAlgo(t_cell_enu, 0.5);
+
+    v.do();
     
-    v = rogers_voro;
-%     v = VoronoiFortuneAlgo(t_cell_enu, 0.5);
-% 
-%     v.do();
+    v.splitSegList();
     
-    v_cell_enu_angle = [t_cell_enu, t_cell_angle, t_cell_power, t_real_radius];
-    radius(:, index_voronoi_vradius_max:index_voronoi_sradius_angle) = v.calculateRadius(v_cell_enu_angle, Adjustment_Clearance, toh_model);
+%     v_cell_enu_angle = [t_cell_enu, t_cell_angle, t_cell_power, t_real_radius];
+    radius(:, index_voronoi_vradius_max:index_voronoi_sradius_angle) = v.calculateRadius(t_cell_enu, t_cell_angle, t_cell_power, t_real_radius, Adjustment_Clearance, toh_model);
     
 end
 

@@ -1,16 +1,22 @@
-function drawCellVoroGeo(cell_enu_angle_radius, vertexs, nbr_points, segs, t_cell_enu_angle)
+function drawCellVoroGeo(cell_enu, cell_angle, cell_radius, vertexs, nbr_points, segs, t_cell_enu, t_cell_angle)
 
 idx_lat = 1;
 idx_long = 2;
-idx_start_angle = 3;
-idx_stop_angle = 4;
-idx_radius = 5;
+idx_start_angle = 1;
+idx_stop_angle = 2;
+idx_radius = 1;
 
-p.x = cell_enu_angle_radius(idx_lat);
-p.y = cell_enu_angle_radius(idx_long);
-start_angle = cell_enu_angle_radius(idx_start_angle);
-stop_angle = cell_enu_angle_radius(idx_stop_angle);
-radius = cell_enu_angle_radius(idx_radius);
+p.x = cell_enu(idx_lat);
+p.y = cell_enu(idx_long);
+
+if isempty(cell_angle)
+    cell_angle = [0, 360];
+end
+
+start_angle = cell_angle(idx_start_angle);
+stop_angle = cell_angle(idx_stop_angle);
+
+radius = cell_radius(idx_radius);
 
 figure;
 hold on;
@@ -43,12 +49,16 @@ for ii=1:size(nbr_points, 1)
 
     nbr_point.x = nbr_points(ii, 1);
     nbr_point.y = nbr_points(ii, 2);
-    if inArcDirection(p, cell_enu_angle_radius(1, idx_start_angle:idx_stop_angle), nbr_point)
-        for jj=1:size(t_cell_enu_angle, 1)
-            if t_cell_enu_angle(jj, idx_lat)==nbr_point.x ...
-                    && t_cell_enu_angle(jj, idx_long)==nbr_point.y
-                nbr_start_angle = t_cell_enu_angle(jj, idx_start_angle);
-                nbr_stop_angle = t_cell_enu_angle(jj, idx_stop_angle);
+    if inArcDirection(p, cell_angle(1, idx_start_angle:idx_stop_angle), nbr_point)
+        for jj=1:size(t_cell_enu, 1)
+            if t_cell_enu(jj, idx_lat)==nbr_point.x ...
+                    && t_cell_enu(jj, idx_long)==nbr_point.y
+                if isempty(t_cell_angle)
+                    continue;
+                else
+                    nbr_start_angle = t_cell_enu_angle(jj, idx_start_angle);
+                    nbr_stop_angle = t_cell_enu_angle(jj, idx_stop_angle);
+                end
                 [nbr_start_angle, nbr_stop_angle] = changeGeoAngle(nbr_start_angle, ...
                     nbr_stop_angle);
                 

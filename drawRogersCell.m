@@ -6,32 +6,54 @@
 % load rogers_radius;
 % load rogers_voronoi;
 % load rogers_isd_radius;
+% load turkey_radius;
+% load turkey_voronoi;
+% load turkey_isd_radius;
+% load india_radius;
+% load india_voronoi;
+% load india_isd_radius;
+% load wx_radius;
+% load wx_voronoi;
+% load wx_isd_radius;
+
 
 show_isd = true;
-show_voronoi = false;
+show_voronoi = true;
 
-for index = 49 : 50
+voro_radius = wx_voro_radius;
+isd_radius = wx_isd_radius;
+isd_radius_all = wx_isd_radius_all;
+v = wx_voro;
+
+for index = 33 : 35
     cell_enu = r_cell_enu(index, :);
-    cell_angle = r_cell_angle(index, :);
+    
+    if ~isempty(r_cell_angle)
+        cell_angle = r_cell_angle(index, :);
+    else
+        cell_angle = [];
+    end
     
     if show_voronoi
         
         voro_smax = 5;
-        radius = rogers_voro_radius(index, voro_smax);
-    elseif show_isd
+        v_radius = voro_radius(index, voro_smax);
+    end
+    
+    if show_isd
         isd_max = 1;
-        radius = rogers_isd_radius(index, isd_max);
+        i_radius = isd_radius(index, isd_max);
     end
         
-    d_cell_enu_angle_radius = [cell_enu, cell_angle, radius];
-
-    t_cell_enu_angle = [t_cell_enu, t_cell_angle];
+%     d_cell_enu_angle_radius = [cell_enu, cell_angle, radius];
+% 
+%     t_cell_enu_angle = [t_cell_enu, t_cell_angle];
         
         
     if show_voronoi
-        [segs, vertexs, nbr_points] = rogers_voro.findResultInfo(cell_enu);
+        [segs, vertexs, nbr_points] = v.findResultInfo(cell_enu);
         
-        drawCellVoroGeo(d_cell_enu_angle_radius, vertexs, nbr_points, segs, t_cell_enu_angle);
+        drawCellVoroGeo(cell_enu, cell_angle, v_radius, vertexs, nbr_points, segs, t_cell_enu, t_cell_angle);
 
     end
     
@@ -44,7 +66,7 @@ for index = 49 : 50
 %         end
         
         
-        isd_radius = rogers_isd_radius_all(p_loc(1), :);
-        drawCellISDGeo(d_cell_enu_angle_radius, t_cell_enu_angle, isd_radius, 5, 50);
+        t_isd_radius = isd_radius_all(p_loc(1), :);
+        drawCellISDGeo(cell_enu, cell_angle, i_radius, t_cell_enu, t_cell_angle, t_isd_radius, 5, 50);
     end
 end

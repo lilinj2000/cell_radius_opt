@@ -119,60 +119,63 @@ switch data_area
         gsm_tags = [ urban_dt_tags; suburban_brampton_tags; ...
                     suburban_scarborough_tags; rural_orangeville_tags];
                 
-    case turkey_beyoglu
-
-    gsm_data = turkey_beyoglu_cell;
-    gsm_tags = turkey_beyoglu_tags2;
-
-    case turkey_incek
-    gsm_data = turkey_incek_cell;
-    gsm_tags = turkey_incek_tags2;
-
-
-    case turkey_sariyer
-
-    gsm_data = turkey_sariyer_cell;
-    gsm_tags = turkey_sariyer_tags2;
-
-    case turkey_ulus
-
-    gsm_data = turkey_ulus_cell;
-    gsm_tags = turkey_ulus_tags;
-
-    case turkey_uskudar
-
-    gsm_data = turkey_uskudar_cell;
-    gsm_tags = turkey_uskudar_tags2;
+%     case turkey_beyoglu
+% 
+%     gsm_data = turkey_beyoglu_cell;
+%     gsm_tags = turkey_beyoglu_tags2;
+% 
+%     case turkey_incek
+%     gsm_data = turkey_incek_cell;
+%     gsm_tags = turkey_incek_tags2;
+% 
+% 
+%     case turkey_sariyer
+% 
+%     gsm_data = turkey_sariyer_cell;
+%     gsm_tags = turkey_sariyer_tags2;
+% 
+%     case turkey_ulus
+% 
+%     gsm_data = turkey_ulus_cell;
+%     gsm_tags = turkey_ulus_tags;
+% 
+%     case turkey_uskudar
+% 
+%     gsm_data = turkey_uskudar_cell;
+%     gsm_tags = turkey_uskudar_tags2;
     
     case turkey_all
     % turkey all
-    gsm_data = [turkey_beyoglu_cell'; turkey_incek_cell'; ...
-                turkey_sariyer_cell'; turkey_ulus_cell'; ...
-                turkey_uskudar_cell'];
+%     gsm_data = [turkey_beyoglu_cell'; turkey_incek_cell'; ...
+%                 turkey_sariyer_cell'; turkey_ulus_cell'; ...
+%                 turkey_uskudar_cell'];
+            
+    gsm_data = turkey_cell;
     gsm_tags = [ turkey_beyoglu_tags2; turkey_incek_tags2; ...
                 turkey_sariyer_tags2; turkey_ulus_tags; ...
                 turkey_uskudar_tags2];
 
-    case india_medium
+%     case india_medium
     %%%%%%%%%%%%India Data%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % india medium
-    gsm_data = india_medium_cell;
-    gsm_tags = india_medium_tags;
-
-    case india_rural
-    % india rural
-    gsm_data = india_rural_cell;
-    gsm_tags = india_rural_tags2;
-
-    case india_rural_highway
-    % india rural highway
-    gsm_data = india_rural_highway_cell;
-    gsm_tags = india_rural_highway_tags2;
+%     gsm_data = india_medium_cell;
+%     gsm_tags = india_medium_tags;
+% 
+%     case india_rural
+%     % india rural
+%     gsm_data = india_rural_cell;
+%     gsm_tags = india_rural_tags2;
+% 
+%     case india_rural_highway
+%     % india rural highway
+%     gsm_data = india_rural_highway_cell;
+%     gsm_tags = india_rural_highway_tags2;
 
     case india_all
     % india all
-    gsm_data = [india_medium_cell'; india_rural_cell'; ...
-                india_rural_highway_cell'];
+%     gsm_data = [india_medium_cell'; india_rural_cell'; ...
+%                 india_rural_highway_cell'];
+    gsm_data = india_cell';
     gsm_tags = [ india_medium_tags; india_rural_tags2; ...
                 india_rural_highway_tags2];
             
@@ -195,7 +198,7 @@ switch data_area
         CELL_ID = 1;
         
 %         gsm_data = wx_wcdma_cells;
-        gsm_data = wx_new_cell;
+        gsm_data = wx_new_total_data;
         gsm_tags = wx_wcdma_tags;
         
     otherwise
@@ -209,10 +212,9 @@ end
 
 
 
-clear cell;
 cell_data = cell(0, LAST_FIELD);
 tags = zeros(length(gsm_data), 1);
-
+index_cell_data = 0;
 for ii = 1 : length(gsm_data)
     switch country
         case {rogers, turkey}
@@ -268,6 +270,17 @@ for ii = 1 : length(gsm_data)
     else
         lac_ci = strcat(gsm_data{ii}{LAC}, '-', ...
                 gsm_data{ii}{CI});
+            
+        latitude = gsm_data{ii}{LATITUDE};
+        longitude = gsm_data{ii}{LONGITUDE};
+        
+        if country~=india
+            if isempty(latitude) || isempty(longitude) ...
+                    || length(latitude)<=4 || length(longitude)<=4
+                continue;
+            end
+        end
+        
         cell_latlong(1, 1) = dms2deg(gsm_data{ii}{LATITUDE});
         cell_latlong(1, 2) = dms2deg(gsm_data{ii}{LONGITUDE});
     end
@@ -280,16 +293,19 @@ for ii = 1 : length(gsm_data)
     end
     cell_enu = convertlatlong2enu(cell_lat_long_rad, cell_lat_long_rad_base);
     
-    cell_data{ii, LAC_CI} = lac_ci;
-    cell_data{ii, LAT_LONG} = cell_enu;
-    cell_data{ii, CELL_ANGLE} = cell_angle;
-    cell_data{ii, CELL_FREQ} = cell_freq;
-    cell_data{ii, CELL_CLASS} = cell_type;
-    cell_data{ii, CELL_POWER} = cell_power;
-    cell_data{ii, CUSTOM_RADIUS} = custom_radius;
-    cell_data{ii, CELL_TALIM} = cell_talim;
-    cell_data{ii, CELL_HEIGHT} = cell_height;
-    cell_data{ii, CELL_ACCMIN} = cell_accmin;
+    
+    index_cell_data =  index_cell_data + 1;
+    
+    cell_data{index_cell_data, LAC_CI} = lac_ci;
+    cell_data{index_cell_data, LAT_LONG} = cell_enu;
+    cell_data{index_cell_data, CELL_ANGLE} = cell_angle;
+    cell_data{index_cell_data, CELL_FREQ} = cell_freq;
+    cell_data{index_cell_data, CELL_CLASS} = cell_type;
+    cell_data{index_cell_data, CELL_POWER} = cell_power;
+    cell_data{index_cell_data, CUSTOM_RADIUS} = custom_radius;
+    cell_data{index_cell_data, CELL_TALIM} = cell_talim;
+    cell_data{index_cell_data, CELL_HEIGHT} = cell_height;
+    cell_data{index_cell_data, CELL_ACCMIN} = cell_accmin;
     
     
     cell1 = lac_ci;
@@ -308,7 +324,7 @@ for ii = 1 : length(gsm_data)
         end
     end
     
-    cell_data{ii, REAL_RADIUS} = tags(ii);
+    cell_data{index_cell_data, REAL_RADIUS} = tags(ii);
     
 end
 

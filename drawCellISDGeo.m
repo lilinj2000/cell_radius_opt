@@ -1,19 +1,29 @@
-function drawCellISDGeo(cell_enu_angle_radius, t_cell_enu_angle, isd_radius, nbr_count, isd_clearance)
+function drawCellISDGeo(cell_enu, cell_angle, cell_radius, t_cell_enu, t_cell_angle, isd_radius, nbr_count, isd_clearance)
 
 idx_lat = 1;
 idx_long = 2;
-idx_start_angle = 3;
-idx_stop_angle = 4;
-idx_radius = 5;
+idx_start_angle = 1;
+idx_stop_angle = 2;
+idx_radius = 1;
 
-p.x = cell_enu_angle_radius(idx_lat);
-p.y = cell_enu_angle_radius(idx_long);
-start_angle = cell_enu_angle_radius(idx_start_angle);
-stop_angle = cell_enu_angle_radius(idx_stop_angle);
-radius = cell_enu_angle_radius(idx_radius);
+p.x = cell_enu(idx_lat);
+p.y = cell_enu(idx_long);
+
+if isempty(cell_angle)
+    cell_angle = [0, 360];
+end
+
+start_angle = cell_angle(idx_start_angle);
+stop_angle = cell_angle(idx_stop_angle);
+
+
+radius = cell_radius(idx_radius);
 
 [~, index] = sort(isd_radius(:));
-t_cell_enu_angle = t_cell_enu_angle(index, :);
+t_cell_enu = t_cell_enu(index, :);
+if ~isempty(t_cell_angle)
+    t_cell_angle = t_cell_angle(index, :);
+end
 isd_radius = isd_radius(index);
 
 figure;
@@ -35,24 +45,29 @@ cur_cell = 0;
 radius_set = [];
 while true
     cur_cell = cur_cell + 1;
-    if cur_cell>size(t_cell_enu_angle, 1)
+    if cur_cell>size(t_cell_enu, 1)
         break;
     end
     
-    nbr_point.x = t_cell_enu_angle(cur_cell, idx_lat);
-    nbr_point.y = t_cell_enu_angle(cur_cell, idx_long);
+    nbr_point.x = t_cell_enu(cur_cell, idx_lat);
+    nbr_point.y = t_cell_enu(cur_cell, idx_long);
     
    
     if isd_radius(cur_cell)>isd_clearance
 
          plot(nbr_point.x, nbr_point.y, '*');
     
-         if inArcDirection(p, cell_enu_angle_radius(1, idx_start_angle:idx_stop_angle), nbr_point)
-             for jj=1:size(t_cell_enu_angle, 1)
-                 if t_cell_enu_angle(jj, idx_lat)==nbr_point.x ...
-                         && t_cell_enu_angle(jj, idx_long)==nbr_point.y
-                     nbr_start_angle = t_cell_enu_angle(jj, idx_start_angle);
-                     nbr_stop_angle = t_cell_enu_angle(jj, idx_stop_angle);
+         if inArcDirection(p, cell_angle(1, idx_start_angle:idx_stop_angle), nbr_point)
+             for jj=1:size(t_cell_enu, 1)
+                 if t_cell_enu(jj, idx_lat)==nbr_point.x ...
+                         && t_cell_enu(jj, idx_long)==nbr_point.y
+                     if ~isempty(t_cell_angle)
+                        nbr_start_angle = t_cell_enu_angle(jj, idx_start_angle);
+                        nbr_stop_angle = t_cell_enu_angle(jj, idx_stop_angle);
+                     else
+                         continue;
+                     end
+                     
                      [nbr_start_angle, nbr_stop_angle] = changeGeoAngle(nbr_start_angle, ...
                          nbr_stop_angle);
                      
