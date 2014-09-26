@@ -18,14 +18,14 @@
 
 
 show_isd = true;
-show_voronoi = true;
+show_voronoi = false;
 
-voro_radius = wx_voro_radius;
-isd_radius = wx_isd_radius;
-isd_radius_all = wx_isd_radius_all;
-v = wx_voro;
+voro_radius = rogers_voro_radius;
+isd_radius = rogers_isd_radius;
+isd_radius_all = rogers_isd_radius_all;
+v = rogers_voro;
 
-for index = 33 : 35
+for index = 35 : 35
     cell_enu = r_cell_enu(index, :);
     
     if ~isempty(r_cell_angle)
@@ -35,14 +35,11 @@ for index = 33 : 35
     end
     
     if show_voronoi
-        
-        voro_smax = 5;
-        v_radius = voro_radius(index, voro_smax);
+        v_radius = voro_radius(index, :);
     end
     
     if show_isd
-        isd_max = 1;
-        i_radius = isd_radius(index, isd_max);
+        i_radius = isd_radius(index, :);
     end
         
 %     d_cell_enu_angle_radius = [cell_enu, cell_angle, radius];

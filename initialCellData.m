@@ -1,6 +1,14 @@
 function cell_data = initialCellData(country, data_area)
-% inital cell data
-% 
+% INITIALCELLDATA which convert the cell data to the common format.
+%
+% input :
+%   country     - rogers, turkey, india, china
+%   data_area   - rogers_all, turkey_all, india_all, china_beijing
+% ouput :
+%   cell_data   - [LAC_CI, LAT_LONG, CELL_ANGLE, CELL_FREQ, CELL_CLASS, ...
+%                   CELL_POWER, CUSTOM_RADIUS, CELL_TALIM, CELL_ACCMIN, ...
+%                   CELL_HEIGHT, REAL_RADIUS]
+
 
 importSysVar;
 

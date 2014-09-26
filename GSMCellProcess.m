@@ -3,9 +3,9 @@
 
 
 %% environment initial
-close all;
-clear;
-clc;
+% close all;
+% clear;
+% clc;
 
 
 %% Parameter Confgure
@@ -105,7 +105,7 @@ ISD_GeographicalDistanceRatio = 0.7;
 custom_method = false;
 ta_method = false;
 oh_method = false;
-isd_method = false;
+isd_method = true;
 voronoi_method = true;
 
 methods = 0;
@@ -213,22 +213,27 @@ importSysVar;
 % all = 4;
 % area_type = all;
 
-subhead = {'(china beijing all)'};
+subhead = {'(wuxi all)'};
 
-skip_power = true;
-skip_angle = true;
+skip_power = false;
+skip_angle = false;
 
 % initial the cell data
 % cell_data = initialCellData(india, india_all);
 % load rogers_radius;
 % load turkey_radius;
-load beijing_radius;
+% load beijing_radius;
 
-radius_ready = false;
+radius_ready = true;
 
 if radius_ready
-%     radius = [rogers_ta_radius, rogers_oh_radius, rogers_toh_radius, rogers_isd_radius, rogers_voro_radius];
-    radius = [turkey_ta_radius, turkey_oh_radius, turkey_toh_radius, turkey_isd_radius, turkey_voro_radius];
+    
+    radius = [wx_isd_radius, wx_voro_radius];
+
+%     radius = [radius; suburban_scarborough_ta_radius, suburban_scarborough_oh_radius, suburban_scarborough_toh_radius, suburban_scarborough_isd_radius, suburban_scarborough_voro_radius];
+    
+    
+    %     radius = rogers_isd_radius;
     drawAnalysisResult(radius, r_real_radius, methods_name, subhead);
     return;
 end
