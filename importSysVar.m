@@ -19,23 +19,23 @@ turkey = 2;
 india = 3;
 china = 4;
 
-rogers_area_rural_orangeville = 1;
-rogers_area_suburban_brampton = 2;
-rogers_area_suburban_scarborough = 3;
-rogers_area_suburban = 4;
-rogers_area_urban_dt = 5;
+% rogers_area_rural_orangeville = 1;
+% rogers_area_suburban_brampton = 2;
+% rogers_area_suburban_scarborough = 3;
+% rogers_area_suburban = 4;
+% rogers_area_urban_dt = 5;
 rogers_area_all = 6;
 
-turkey_beyoglu = 7;
-turkey_incek = 8;
-turkey_sariyer = 9;
-turkey_ulus = 10;
-turkey_uskudar = 11;
+% turkey_beyoglu = 7;
+% turkey_incek = 8;
+% turkey_sariyer = 9;
+% turkey_ulus = 10;
+% turkey_uskudar = 11;
 turkey_all = 12;
 
-india_medium = 13;
-india_rural = 14;
-india_rural_highway = 15;
+% india_medium = 13;
+% india_rural = 14;
+% india_rural_highway = 15;
 india_all = 16;
 
 china_beijing = 17;

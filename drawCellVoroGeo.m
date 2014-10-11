@@ -1,4 +1,4 @@
-function drawCellVoroGeo(cell_enu, cell_angle, cell_radius, vertexs, nbr_points, segs, t_cell_enu, t_cell_angle)
+function drawCellVoroGeo(lac_ci, cell_enu, cell_angle, cell_radius, vertexs, nbr_points, segs, t_cell_enu, t_cell_angle)
 
 idx_lat = 1;
 idx_long = 2;
@@ -35,6 +35,7 @@ for step=1:4
     
     % draw point
     plot(p.x, p.y, '*');
+    text(p.x+5, p.y+5, lac_ci);
     
     % draw vertex
     plot(vertexs(:, 1), vertexs(:, 2), '^');

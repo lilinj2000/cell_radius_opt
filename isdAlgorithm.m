@@ -14,7 +14,7 @@ idx_lat = 1;
 idx_long = 2;
 
 idx_start_angle = 1;
-idx_stop_angle = 1;
+idx_stop_angle = 2;
 idx_bspwr = 1;
 idx_accmin = 2;
 
@@ -30,25 +30,28 @@ radius = [];
 isd_radius = zeros(size(cell_enu, 1));
 
 % compute all the isd distances, and store in isd_radius
-% load rogers_isd_radius;
-% isd_radius = rogers_isd_radius_all;
+% load turkey_isd_radius;
+% isd_radius = turkey_isd_radius_all;
 
-for ii = 1 : size(cell_enu, 1)
-%     cell_enu_angle_dist = [];
-    
-    log.info('isdAlgorithm()', ['compute no ', num2str(ii)]);
+load rogers_isd_radius;
+isd_radius = rogers_isd_radius_all;
 
-    for jj = 1 : size(cell_enu, 1)
-        if ii~=jj
-            if isd_radius(jj,ii)~=0
-                isd_radius(ii, jj)= isd_radius(jj, ii);
-            else
-                isd_radius(ii, jj) = sqrt((cell_enu(ii, idx_lat)-cell_enu(jj, idx_lat)).^2 ...
-                    + (cell_enu(ii, idx_long)-cell_enu(jj, idx_long)).^2);
-            end
-        end
-    end
-end
+% for ii = 1 : size(cell_enu, 1)
+% %     cell_enu_angle_dist = [];
+%     
+%     log.info('isdAlgorithm()', ['compute no ', num2str(ii)]);
+% 
+%     for jj = 1 : size(cell_enu, 1)
+%         if ii~=jj
+%             if isd_radius(jj,ii)~=0
+%                 isd_radius(ii, jj)= isd_radius(jj, ii);
+%             else
+%                 isd_radius(ii, jj) = sqrt((cell_enu(ii, idx_lat)-cell_enu(jj, idx_lat)).^2 ...
+%                     + (cell_enu(ii, idx_long)-cell_enu(jj, idx_long)).^2);
+%             end
+%         end
+%     end
+% end
    
 
 for ii=1:size(cell_enu,1)
@@ -65,9 +68,9 @@ for ii=1:size(cell_enu,1)
             cell_angle_tmp = cell_angle(index, :);
         end
         
-        if ~isempty(cell_power)
-            cell_power_tmp = cell_power(index, :);
-        end
+%         if ~isempty(cell_power)
+%             cell_power_tmp = cell_power(index, :);
+%         end
         
         cell_dist = isd_radius(index, ii);
     
@@ -107,6 +110,13 @@ for ii=1:size(cell_enu,1)
                     center.x = cell_enu(ii, idx_lat);
                     center.y = cell_enu(ii, idx_long);
                     
+                    if found %% check the same point
+                        if ~(p.x==cell_enu_tmp(jj, idx_lat) ...
+                            && p.y==cell_enu_tmp(jj, idx_long))
+                            break;
+                        end
+                    end
+                    
                     p.x = cell_enu_tmp(jj, idx_lat);
                     p.y = cell_enu_tmp(jj, idx_long);
                     
@@ -126,17 +136,17 @@ for ii=1:size(cell_enu,1)
                             % the cur cell is also in direction of the cell
                             % so, the radius should be ISD/2
                             radiusAngle = cell_dist(jj, idx_dist)/2;
+                            break;
                         else
                             radiusAngle = cell_dist(jj, idx_dist);
+                            continue; % check the next point whether the same point
                         end
-                        
-                        break;
                     end
                 end
                 
                 if ~found
                     % radiusAngle OH model
-                    radiusAngle = tohFunc(cell_power, ii, toh_model);
+                    radiusAngle = tohFunc(cell_power(ii, :), toh_model);
                 end
             end
         elseif length(cell_dist)>2 %very closed
@@ -155,7 +165,7 @@ end
 end
 
 
-function radius = tohFunc(cell_power, inidex, toh_model)
+function radius = tohFunc(cell_power, toh_model)
 
 max_radius = 30000;
 

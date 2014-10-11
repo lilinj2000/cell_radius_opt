@@ -1,56 +1,21 @@
-clc;
-clear;
+% clc;
+% clear;
+% 
+% close all;
 
-close all;
+importSysVar;
 
-global LAC_CI;
-global LAT_LONG;
-global CELL_ANGLE;
-global CELL_FREQ;
-global CELL_CLASS;
-global CELL_POWER;
-global CUSTOM_RADIUS;
-global CELL_TALIM;
-global CELL_ACCMIN;
-global REAL_RADIUS;
-
-
-rogers = 1;
-turkey = 2;
-india = 3;
-china = 4;
-
-rogers_area_rural_orangeville = 1;
-rogers_area_suburban_brampton = 2;
-rogers_area_suburban_scarborough = 3;
-rogers_area_suburban = 4;
-rogers_area_urban_dt = 5;
-rogers_area_all = 6;
-
-turkey_beyoglu = 7;
-turkey_incek = 8;
-turkey_sariyer = 9;
-turkey_ulus = 10;
-turkey_uskudar = 11;
-turkey_all = 12;
-
-india_medium = 13;
-india_rural = 14;
-india_rural_highway = 15;
-india_all = 16;
-
-china_beijing = 17;
-
-china_wuxi = 18;
-
-subhead = {'(china wuxi - real radius)'};
+subhead = {'(turkey - real radius)'};
 
 % init the cell
-cell_data = initialCellData(china, china_wuxi);
+% cell_data = initialCellData(china, china_wuxi);
+cell_data = turkey_cell;
+cell_radius = t_real_radius;
+idx_real_radius = 4;
 
 index_radius = 0;
 cell_data_tag = [];
-for ii=1:length(cell_data)
+for ii=1:size(cell_data, 1)
     if cell_data{ii, REAL_RADIUS}~=0
         cell_data_tag = [cell_data_tag; cell_data(ii, :)];
         
@@ -58,7 +23,7 @@ for ii=1:length(cell_data)
         cell_lat_long(index_radius, 1) = cell_data{ii, LAT_LONG}(1);
         cell_lat_long(index_radius, 2) = cell_data{ii, LAT_LONG}(2);
     
-        real_radius(index_radius) = cell_data{ii, REAL_RADIUS};
+        real_radius(index_radius) = cell_radius(ii, idx_real_radius);
     end
 end
 
@@ -126,6 +91,10 @@ for ii = 1 : length(cell_data_tag)
         cell_power(ii) = 0;
     else
         cell_power(ii) = str2num(char(cell_data{ii, CELL_POWER})); 
+        
+        if ~isempty(cell_data{ii, CELL_ACCMIN})
+            cell_power(ii) = cell_power(ii) + str2num(char(cell_data{ii, CELL_ACCMIN}));
+        end
     end
 end
 
@@ -144,15 +113,15 @@ if ~isempty(find(cell_power~=0))
 
         switch cell_freq
             case 'GSM800'
-                plot3(GSM800, str2num(char(cell_data_tag{ii, CELL_POWER})), real_radius(ii), '*');
+                plot3(GSM800, cell_power(ii), real_radius(ii), '*');
             case 'GSM900'
-                plot3(GSM900, str2num(char(cell_data_tag{ii, CELL_POWER})), real_radius(ii), '*');
+                plot3(GSM900, cell_power(ii), real_radius(ii), '*');
             case 'GSM1800'
-                plot3(GSM1800, str2num(char(cell_data_tag{ii, CELL_POWER})), real_radius(ii), '*');
+                plot3(GSM1800, cell_power(ii), real_radius(ii), '*');
             case 'GSM1900'
-                plot3(GSM1900, str2num(char(cell_data_tag{ii, CELL_POWER})), real_radius(ii), '*');
+                plot3(GSM1900, cell_power(ii), real_radius(ii), '*');
             otherwise
-                plot3(OTHER, str2num(char(cell_data_tag{ii, CELL_POWER})), real_radius(ii), '*');
+                plot3(OTHER, cell_power(ii), real_radius(ii), '*');
         end
     end
 

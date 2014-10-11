@@ -598,7 +598,7 @@ classdef VoronoiFortuneAlgo < handle
            idx_lat = 1;
            idx_long = 2;
            idx_start_angle = 1;
-           idx_stop_angle = 1;
+           idx_stop_angle = 2;
            idx_bspwr = 1;
            idx_accmin = 2;
            idx_dist = 1;
@@ -631,7 +631,7 @@ classdef VoronoiFortuneAlgo < handle
                     
                     vradius = VFA.computeVRadius(p, cur_cell_angle, cur_cell_power, isd_clearance, max_radius, min_radius, toh_model);
                     
-                    sradius = VFA.computeSRadius(p, cell_enu, cell_angle, cell_power, cell_real_radius, isd_clearance, max_radius, min_radius, toh_model);
+                    sradius = VFA.computeSRadius(p, cur_cell_angle, cur_cell_power, cell_enu, cell_angle, isd_clearance, max_radius, min_radius, toh_model);
                     
                     radius(size(radius, 1)+1, :) = [vradius, sradius];
                 end
@@ -732,7 +732,7 @@ classdef VoronoiFortuneAlgo < handle
         end
         
         
-        function radius = computeSRadius(VFA, p, cell_enu, cell_angle, cell_power, cell_real_radius, isd_clearance, max_radius, min_radius, toh_model)
+        function radius = computeSRadius(VFA, p, cur_cell_angle, cur_cell_power, cell_enu, cell_angle, isd_clearance, max_radius, min_radius, toh_model)
             
             idx_lat = 1;
             idx_long = 2;
@@ -743,7 +743,7 @@ classdef VoronoiFortuneAlgo < handle
             idx_dist = 1;
             
             skip_toh = false;
-            if isempty(cell_angle) || isempty(cell_power)
+            if isempty(cur_cell_angle) || isempty(cur_cell_power)
                 skip_toh = true;
             end
             
@@ -775,13 +775,13 @@ classdef VoronoiFortuneAlgo < handle
                     bFound = 0;
                     
                     if ~skip_toh
-                        cur_cell_angle = cell_angle(p_loc, :);
+%                         cur_cell_angle = cur_cell_angle(p_loc, :);
                         
                         if inArcDirection(p, cur_cell_angle, point)
                             
                             bAngleFound = 1;
                             bFound = 1;
-                            for kk=1:size(cell_enu_angle_radius, 1)
+                            for kk=1:size(cell_enu, 1)
                                 if cell_enu(kk, idx_lat)==point.x ...
                                         && cell_enu(kk, idx_long)==point.y
                                     if inArcDirection(point, cell_angle(kk, idx_start_angle:idx_stop_angle), p)
@@ -823,12 +823,12 @@ classdef VoronoiFortuneAlgo < handle
                     if skip_toh
                         sradiusAngle = sradiusMin;
                     else
-                        sradiusAngle = VFA.tohFunc(cell_power, toh_model);
+                        sradiusAngle = VFA.tohFunc(cur_cell_power, toh_model);
                     end
                 end
             else
                 VFA.log.error('computeSRadius()', strcat('error data. (x,y) - (', num2str(p.x), ',', num2str(p.y), ')')); 
-                [sradiusMax, sradiusMean, sradiusMin, sradiusAngle] = VFA.tohFunc(cell_power, toh_model);
+                [sradiusMax, sradiusMean, sradiusMin, sradiusAngle] = VFA.tohFunc(cur_cell_power, toh_model);
             end
             
             radius = [sradiusMax, sradiusMean, sradiusMin, sradiusAngle];

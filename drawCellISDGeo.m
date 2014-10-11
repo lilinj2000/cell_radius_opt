@@ -1,4 +1,4 @@
-function drawCellISDGeo(cell_enu, cell_angle, cell_radius, t_cell_enu, t_cell_angle, isd_radius, nbr_count, isd_clearance)
+function drawCellISDGeo(lac_ci, cell_enu, cell_angle, cell_radius, t_cell_enu, t_cell_angle, isd_radius, nbr_count, isd_clearance)
 
 idx_lat = 1;
 idx_long = 2;
@@ -39,6 +39,7 @@ for step = 1: 2
     
     % draw point
     plot(p.x, p.y, '*');
+    text(p.x+5, p.y+5, lac_ci);
     
     % draw arc
     drawArc(p, radius, start_angle, stop_angle, 1);

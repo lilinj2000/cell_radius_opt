@@ -5,10 +5,11 @@ close all;
 
 importSysVar;
 
-subhead = {'(china beijing - cell geo)'};
+subhead = {'(turkey - cellgeo)'};
 
 % init the cell
 cell_data = initialCellData(china, china_beijing);
+% cell_data = turkey_cell;
 
 
 for ii=1:length(cell_data)
