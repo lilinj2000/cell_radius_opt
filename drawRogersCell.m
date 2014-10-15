@@ -17,16 +17,16 @@
 % load wx_isd_radius;
 
 
-show_isd = true;
-show_voronoi = true;
+show_isd = false;
+show_voronoi = false;
 
 %% rogers
-cell_info_all = rogers_cell_info;
-
-voro_radius = rogers_voro_radius;
-isd_radius = rogers_isd_radius;
-isd_radius_all = rogers_isd_radius_all;
-v = rogers_voro;
+% cell_info_all = rogers_cell_info;
+% 
+% voro_radius = rogers_voro_radius;
+% isd_radius = rogers_isd_radius;
+% isd_radius_all = rogers_isd_radius_all;
+% v = rogers_voro;
 
 % lac_ci = '4300-25077';
 % lac_ci = '17500-33411';
@@ -46,13 +46,13 @@ v = rogers_voro;
 % lac_ci = '35506-58331';
 
 %% china wuxi
-% cell_info_all = wx_cell_info;
-% 
-% voro_radius = wx_voro_radius;
-% isd_radius = wx_isd_radius;
-% isd_radius_all = wx_isd_radius_all;
-% v = wx_voro;
-% % lac_ci = '0-112';
+cell_info_all = wx_cell_info;
+
+voro_radius = wx_voro_radius;
+isd_radius = wx_isd_radius;
+isd_radius_all = wx_isd_radius_all;
+v = wx_voro;
+% lac_ci = '0-112';
 % lac_ci = '0-113';
 
 %% china beijing
@@ -67,7 +67,7 @@ v = rogers_voro;
 close all;
 
 % 
-for index=255:256
+for index=1:50
     lac_ci = r_lac_ci{index, 1};
     
 %     index = find(ismember(r_lac_ci, lac_ci)>0);

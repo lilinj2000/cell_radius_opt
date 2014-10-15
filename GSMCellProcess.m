@@ -103,11 +103,11 @@ ISD_GeographicalDistanceRatio = 0.7;
 %% Algorithm Method Selection
 
 custom_method = false;
-ta_method = false;
-oh_method = false;
+ta_method = true;
+oh_method = true;
 toh_method = true;
-isd_method = false;
-voronoi_method = false;
+isd_method = true;
+voronoi_method = true;
 
 methods = 0;
 index_custom_radius = 0;
@@ -216,7 +216,7 @@ importSysVar;
 % all = 4;
 % area_type = all;
 
-subhead = {'(turkey all)'};
+subhead = {'(rogers all)'};
 
 skip_power = true;
 skip_angle = true;
@@ -227,13 +227,14 @@ skip_angle = true;
 % load turkey_radius;
 % load beijing_radius;
 
-radius_ready = false;
+radius_ready = true;
 
 idx_real_radius = 4;
 
 if radius_ready
     
-%     radius = [rogers_ta_radius, rogers_oh_radius, rogers_toh_radius, rogers_isd_radius, rogers_voro_radius];
+    radius = [rogers_ta_radius, rogers_oh_radius, rogers_toh_radius, rogers_isd_radius, rogers_voro_radius];
+    radius = radius + 500;
     
 %     radius = [urban_dt_ta_radius, urban_dt_oh_radius, urban_dt_toh_radius, urban_dt_isd_radius, urban_dt_voro_radius];
 %     real_radius = urban_dt_radius(:, idx_real_radius);
@@ -250,11 +251,13 @@ if radius_ready
     
 % radius = [turkey_ta_radius, turkey_oh_radius, turkey_isd_radius, turkey_voro_radius];
 
-radius = [beijing_isd_radius, beijing_voro_radius];
-radius = radius.*3.6 + 7500;
+% radius = [beijing_isd_radius, beijing_voro_radius];
+% real_radius = r_real_radius(:, 3);
+% radius = radius.*3.6 + 7500;
     %     radius = rogers_isd_radius;
 
 %     radius = [wx_isd_radius, wx_voro_radius];
+%     radius = radius.*(-0.8) + 3500;
 
     real_radius = r_real_radius(:, idx_real_radius);
     drawAnalysisResult(radius, real_radius, methods_name, subhead);

@@ -55,19 +55,19 @@ stop_angle = cell_angle(idx_stop_angle);
 
 
 %% rogers
-load rogers_msr;
-id_type = 2;
-measurementData = [];
-if find(ismember(urban_dt_lac_ci, lac_ci)>0)
-    measurementData = measurement_Urban_DT;
-    id_type = 1;
-elseif find(ismember(suburban_scarborough_lac_ci, lac_ci)>0)
-    measurementData = measurement_Suburban_Scarborough;
-elseif find(ismember(suburban_brampton_lac_ci, lac_ci)>0)
-    measurementData = measurement_Suburban_Brampton;
-elseif find(ismember(rural_orangeville_lac_ci, lac_ci)>0)
-    measurementData = measurement_Rural_Orangeville;
-end
+% load rogers_msr;
+% id_type = 2;
+% measurementData = [];
+% if find(ismember(urban_dt_lac_ci, lac_ci)>0)
+%     measurementData = measurement_Urban_DT;
+%     id_type = 1;
+% elseif find(ismember(suburban_scarborough_lac_ci, lac_ci)>0)
+%     measurementData = measurement_Suburban_Scarborough;
+% elseif find(ismember(suburban_brampton_lac_ci, lac_ci)>0)
+%     measurementData = measurement_Suburban_Brampton;
+% elseif find(ismember(rural_orangeville_lac_ci, lac_ci)>0)
+%     measurementData = measurement_Rural_Orangeville;
+% end
 
 %% turkey
 % id_type = 1;
@@ -90,9 +90,9 @@ end
 % measurementData = measurement;
 
 %% wuxi
-% load wx_msr;
-% id_type = 1;
-% measurementData = measurement_134;
+load wx_msr;
+id_type = 1;
+measurementData = measurement_134;
 
 measurementData = sortrows(measurementData, [CGI_COL]);
 
