@@ -1,8 +1,5 @@
 function drawCellMsrGeo(cell_info, cell_angle)
 
-% load rogers_msr;
-% load turkey_msr;
-
 CGI_COL = 2;
 LONG_COL = 17;
 LAT_COL = 18;
@@ -70,6 +67,7 @@ stop_angle = cell_angle(idx_stop_angle);
 % end
 
 %% turkey
+% load turkey_msr;
 % id_type = 1;
 % measurementData = [];
 % if find(ismember(beyoglu_2g_lac_ci, lac_ci)>0)
@@ -85,14 +83,14 @@ stop_angle = cell_angle(idx_stop_angle);
 % end
 
 %% beijing
-% load beijing_msr;
-% id_type = 1;
-% measurementData = measurement;
+load beijing_msr;
+id_type = 3;
+measurementData = measurement;
 
 %% wuxi
-load wx_msr;
-id_type = 1;
-measurementData = measurement_134;
+% load wx_msr;
+% id_type = 1;
+% measurementData = measurement_134;
 
 measurementData = sortrows(measurementData, [CGI_COL]);
 
@@ -133,6 +131,10 @@ for numOfCgi = 1:length(cgiList(:,1))
         
         
         lac_cid = strcat(num2str(lac), '-', num2str(cid)); 
+        
+        if id_type==3
+            lac_cid = num2str(GSMCellID);
+        end
         
         
         if strcmp(lac_cid, lac_ci)

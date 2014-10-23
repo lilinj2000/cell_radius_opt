@@ -21,52 +21,70 @@
 % end
 % 
 % 
-% bj_msr = measurement(:, [2, 18, 17]);
-% 
-% bj_msr = sortrows(bj_msr, [1, 2, 3]);
 
-% cell_total(:, [5, 6, 7]) = 0;
-% 
-% unq_cellid = sort(unique(cell_total(:, 3)));
-% 
-% for ii=1:size(unq_cellid, 1)
-%     cellid = unq_cellid(ii);
-%     
-%     idx_cell_start = find(cell_total(:, 3)==cellid, 1, 'first');
-%     idx_cell_end = find(cell_total(:, 3)==cellid, 1, 'last');
-%     cell_count = idx_cell_end - idx_cell_start + 1;
-%     
-%     idx_msr_start = find(bj_msr(:, 1)==cellid, 1, 'first'); 
-%     idx_msr_end = find(bj_msr(:, 1)==cellid, 1, 'last');
-%     msr_count = idx_msr_end - idx_msr_start + 1;
-%     
-%     
-%     %% compute the distance between msr and cell
-%     dist = zeros(msr_count, cell_count);
-%     for jj=1:cell_count
-%         ref_lat_long = [cell_total(idx_cell_start+jj-1, 1), cell_total(idx_cell_start+jj-1, 2)];
-%         ref_lat_long = deg2rad(ref_lat_long);
+% process measuremetns
+cell_total = beijing_cell_total_new;
+
+bj_msr = measurement(:, [2, 18, 17]);
+
+bj_msr = sortrows(bj_msr, [1, 2, 3]);
+
+cell_total(:, [5, 6, 7]) = 0;
+
+unq_cellid = sort(unique(cell_total(:, 3)));
+
+% bj_msr_stat = [];
+
+for ii=1:size(unq_cellid, 1)
+    cellid = unq_cellid(ii);
+    
+    idx_cell_start = find(cell_total(:, 3)==cellid, 1, 'first');
+    idx_cell_end = find(cell_total(:, 3)==cellid, 1, 'last');
+    cell_count = idx_cell_end - idx_cell_start + 1;
+    
+    idx_msr_start = find(bj_msr(:, 1)==cellid, 1, 'first'); 
+    idx_msr_end = find(bj_msr(:, 1)==cellid, 1, 'last');
+    msr_count = idx_msr_end - idx_msr_start + 1;
+    
+    
+    %% compute the distance between msr and cell
+    dist = zeros(msr_count, cell_count);
+    for jj=1:cell_count
+        ref_lat_long = [cell_total(idx_cell_start+jj-1, 1), cell_total(idx_cell_start+jj-1, 2)];
+        ref_lat_long = deg2rad(ref_lat_long);
+        
+        msr_lat_long = deg2rad(bj_msr(idx_msr_start:idx_msr_end, 2:3));
+        
+        msr_enu = convertlatlong2enu(msr_lat_long, ref_lat_long);
+        
+        for kk=1:msr_count
+            dist(kk, jj) = sqrt(msr_enu(kk, 1).^2+msr_enu(kk, 2).^2);
+        end
+    end
+    
+    % set the non min dist to zero
+    for jj=1:size(dist, 1)
+        min_dist = min(dist(jj, :));
+        
+        idx = find(dist(jj, :)~=min_dist>0);
+        dist(jj, idx) = 0;
+    end
+    
+    for jj=1:cell_count
+        cell_radius = dist(:, jj);
+        
+        idx = find(cell_radius~=0);
+        
+        if ~isempty(idx)
+            bj_msr(idx_msr_start+idx-1, 4) = jj;
+%             clear msr_stat;
+%             msr_stat(:, 3) = idx_msr_start+idx-1;
+%             msr_stat(:, 2) = jj;
+%             msr_stat(:, 1) = cellid;
 %         
-%         msr_lat_long = deg2rad(bj_msr(idx_msr_start:idx_msr_end, 2:3));
-%         
-%         msr_enu = convertlatlong2enu(msr_lat_long, ref_lat_long);
-%         
-%         for kk=1:msr_count
-%             dist(kk, jj) = sqrt(msr_enu(kk, 1).^2+msr_enu(kk, 2).^2);
-%         end
-%     end
-%     
-%     % set the non min dist to zero
-%     for jj=1:size(dist, 1)
-%         min_dist = min(dist(jj, :));
-%         
-%         idx = find(dist(jj, :)~=min_dist>0);
-%         dist(jj, idx) = 0;
-%     end
-%     
-%     for jj=1:cell_count
-%         cell_radius = dist(:, jj);
-%         
+%             bj_msr_stat = [bj_msr_stat; msr_stat];
+        end
+        
 %         cell_radius(find(cell_radius==0)) = [];
 %         
 %         if ~isempty(cell_radius) 
@@ -75,8 +93,8 @@
 %             cell_total(idx_cell_start+jj-1, 6) = cell_radius(round(size(cell_radius, 1)*0.95));
 %             cell_total(idx_cell_start+jj-1, 7) = cell_radius(size(cell_radius, 1));
 %         end
-%     end
-% end
+    end
+end
 
 
 % cell_total = beijing_cell_total_new ;
@@ -140,26 +158,26 @@
 % end
 
 %% compute voro radius
-cell_angle = [];
-cell_power = [];
-isd_clearance = 50;
-v = beijing_voro_new;
-beijing_voro_radius = zeros(size(r_real_radius, 1), 8);
-min_radius = 100;
-max_radius = 30000;
-for ii=1:size(r_real_radius, 1)
-    
-    lat_long = r_lat_long(ii, :);
-    index = find(ismember(unq_lat_long, lat_long, 'rows')>0);
-    
-    enu_latlong = unq_enu(index, :);
-    p.x = enu_latlong(1, 1);
-    p.y = enu_latlong(1, 2);
-    
-    vradius = v.computeVRadius(p, cell_angle, cell_power, isd_clearance, max_radius, min_radius, toh_model);
-    
-    sradius = v.computeSRadius(p, cell_angle, cell_power, unq_enu, cell_angle, isd_clearance, max_radius, min_radius, toh_model);
-    
-    beijing_voro_radius(ii, :) = [vradius, sradius];
-end
+% cell_angle = [];
+% cell_power = [];
+% isd_clearance = 50;
+% v = beijing_voro_new;
+% beijing_voro_radius = zeros(size(r_real_radius, 1), 8);
+% min_radius = 100;
+% max_radius = 30000;
+% for ii=1:size(r_real_radius, 1)
+%     
+%     lat_long = r_lat_long(ii, :);
+%     index = find(ismember(unq_lat_long, lat_long, 'rows')>0);
+%     
+%     enu_latlong = unq_enu(index, :);
+%     p.x = enu_latlong(1, 1);
+%     p.y = enu_latlong(1, 2);
+%     
+%     vradius = v.computeVRadius(p, cell_angle, cell_power, isd_clearance, max_radius, min_radius, toh_model);
+%     
+%     sradius = v.computeSRadius(p, cell_angle, cell_power, unq_enu, cell_angle, isd_clearance, max_radius, min_radius, toh_model);
+%     
+%     beijing_voro_radius(ii, :) = [vradius, sradius];
+% end
 

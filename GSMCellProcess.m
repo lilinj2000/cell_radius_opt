@@ -100,15 +100,64 @@ ISD_NumberOfClosestCells = 5;
 % towards radius when ISD algorithm is used.
 ISD_GeographicalDistanceRatio = 0.7;
 
-%% Algorithm Method Selection
 
+% rogers
+% load rogers_radius;
+% load rogers_voronoi;
+
+subhead = {'(rogers all)'};
+skip_power = false;
+skip_angle = false;
+cell_data = rogers_cell;
+cell_data_real_radius = rogers_cell_info;
+
+v = rogers_voro;
+
+radius_ready = true;
 custom_method = false;
 ta_method = true;
 oh_method = true;
-toh_method = true;
+toh_method = true; 
 isd_method = true;
 voronoi_method = true;
 
+% turkey
+% load turkey_radius;
+% load turkey_voronoi;
+% subhead = {'(turkey all)'};
+% skip_power = false;
+% skip_angle = false;
+% cell_data = turkey_cell;
+% cell_data_real_radius = turkey_cell_info;
+% 
+% v = turkey_voro;
+% 
+% radius_ready = true;
+% 
+% custom_method = false;
+% ta_method = true;
+% oh_method = true;
+% toh_method = false;  % for tukey, the toh is invalid
+% isd_method = true;
+% voronoi_method = true;
+
+% china-beijing
+% load beijing_radius;
+% load beijing_voronoi;
+% subhead = {'(beijing all)'};
+% skip_power = true;
+% skip_angle = true;
+% 
+% radius_ready = true;
+% 
+% custom_method = false;
+% ta_method = false;
+% oh_method = false;
+% toh_method = false; 
+% isd_method = true;
+% voronoi_method = true;
+
+%% Algorithm Method Selection
 methods = 0;
 index_custom_radius = 0;
 index_ta_radius = 0;
@@ -216,25 +265,23 @@ importSysVar;
 % all = 4;
 % area_type = all;
 
-subhead = {'(rogers all)'};
-
-skip_power = true;
-skip_angle = true;
 
 % initial the cell data
 % cell_data = initialCellData(india, india_all);
-% load rogers_radius;
 % load turkey_radius;
 % load beijing_radius;
 
-radius_ready = true;
 
-idx_real_radius = 4;
+idx_real_radius = 3;  % 0.95 measurements
 
 if radius_ready
     
-    radius = [rogers_ta_radius, rogers_oh_radius, rogers_toh_radius, rogers_isd_radius, rogers_voro_radius];
-    radius = radius + 500;
+    % rogers
+%     radius = [rogers_ta_radius, rogers_oh_radius, rogers_toh_radius, rogers_isd_radius, rogers_voro_radius];
+%     radius = [rogers_ta_radius, rogers_oh_radius, rogers_toh_radius_95, rogers_isd_radius_95, rogers_voro_radius_95];
+    radius = [rogers_ta_radius, rogers_oh_radius, rogers_toh_radius_95, ...
+    rogers_isd_best_radius, rogers_voro_best_radius];
+%     radius = radius + 500;
     
 %     radius = [urban_dt_ta_radius, urban_dt_oh_radius, urban_dt_toh_radius, urban_dt_isd_radius, urban_dt_voro_radius];
 %     real_radius = urban_dt_radius(:, idx_real_radius);
@@ -249,9 +296,14 @@ if radius_ready
 %     radius = [rural_orangeville_ta_radius, rural_orangeville_oh_radius, rural_orangeville_toh_radius, rural_orangeville_isd_radius, rural_orangeville_voro_radius];
 %     real_radius = rural_orangeville_radius(:, idx_real_radius);
     
+% turkey
 % radius = [turkey_ta_radius, turkey_oh_radius, turkey_isd_radius, turkey_voro_radius];
+% radius = [turkey_ta_radius, turkey_oh_radius, turkey_isd_best_radius, turkey_voro_best_radius];
 
+% beijing
 % radius = [beijing_isd_radius, beijing_voro_radius];
+% radius = [beijing_isd_best_radius, beijing_voro_best_radius];
+
 % real_radius = r_real_radius(:, 3);
 % radius = radius.*3.6 + 7500;
     %     radius = rogers_isd_radius;
@@ -260,13 +312,16 @@ if radius_ready
 %     radius = radius.*(-0.8) + 3500;
 
     real_radius = r_real_radius(:, idx_real_radius);
+    
+    index_radius = find(real_radius<100);
+    if ~isempty(index_radius)
+        real_radius(index_radius) = [];
+        radius(index_radius, :) = [];
+    end
+    
     drawAnalysisResult(radius, real_radius, methods_name, subhead);
     return;
 end
-
-cell_data = turkey_cell;
-cell_data_real_radius = turkey_cell_info;
-
 
 
 % [ m, 1]
@@ -399,10 +454,7 @@ if voronoi_method
 %     load india_voronoi;
 %     
 %     v = india_voro;
-% load rogers_voronoi;
-% v = rogers_voro;
-load turkey_voronoi;
-v = turkey_voro;
+
 
 %     v = VoronoiFortuneAlgo(t_cell_enu, 0.5)
 %     v.do();

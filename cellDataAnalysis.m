@@ -1,17 +1,27 @@
 % clc;
 % clear;
 % 
-% close all;
+close all;
 
 importSysVar;
 
-subhead = {'(turkey - real radius)'};
+
 
 % init the cell
 % cell_data = initialCellData(china, china_wuxi);
-cell_data = turkey_cell;
+% cell_data = turkey_cell;
+% cell_radius = t_real_radius;
+
+% rogers
+% subhead = {'(urban dt - real radius)'};
+% cell_data = urban_dt_cell;
+% cell_radius = urban_dt_radius;
+subhead = {'(rogers all - real radius)'};
+cell_data = rogers_cell;
 cell_radius = t_real_radius;
-idx_real_radius = 4;
+
+
+idx_real_radius = 3;  % 0.95 measurements
 
 index_radius = 0;
 cell_data_tag = [];

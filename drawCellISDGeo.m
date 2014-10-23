@@ -1,4 +1,4 @@
-function drawCellISDGeo(lac_ci, cell_enu, cell_angle, cell_radius, t_cell_enu, t_cell_angle, isd_radius, nbr_count, isd_clearance)
+function drawCellISDGeo(lac_ci, cell_enu, cell_angle, cell_radius, i_radius, t_cell_enu, t_cell_angle, isd_radius, nbr_count, isd_clearance)
 
 idx_lat = 1;
 idx_long = 2;
@@ -22,7 +22,7 @@ start_angle = cell_angle(idx_start_angle);
 stop_angle = cell_angle(idx_stop_angle);
 
 
-radius = cell_radius(idx_max);
+radius = i_radius(idx_max);
 
 [~, index] = sort(isd_radius(:));
 t_cell_enu = t_cell_enu(index, :);
@@ -33,7 +33,20 @@ isd_radius = isd_radius(index);
 
 [start_angle, stop_angle] = changeGeoAngle(start_angle, stop_angle);
 
-for step = 1: 2
+
+show_i = true;
+show_i_angle = false;
+
+steps = [];
+if show_i
+    steps = [steps; 1];
+end
+
+if show_i_angle
+    steps = [steps; 2];
+end
+
+for step = steps
     figure;
     hold on;
     
@@ -45,18 +58,22 @@ for step = 1: 2
     drawArc(p, radius, start_angle, stop_angle, 1);
     
     % draw circle
+    [X, Y ] = drawCircle(p.x, p.y, cell_radius);
+    plot(X, Y, 'k--', 'LineWidth',2);
+    
+    
     if step==1
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_max));
+        [X, Y ] = drawCircle(p.x, p.y, i_radius(idx_max));
         plot(X, Y, '--');
         
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_mean));
+        [X, Y ] = drawCircle(p.x, p.y, i_radius(idx_mean));
         plot(X, Y, 'g--');
         
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_min));
+        [X, Y ] = drawCircle(p.x, p.y, i_radius(idx_min));
         plot(X, Y, 'r--');
         
     elseif step==2
-        [X, Y] = drawCircle(p.x, p.y, cell_radius(idx_angle));
+        [X, Y] = drawCircle(p.x, p.y, i_radius(idx_angle));
         plot(X, Y, 'c--');
     end
     

@@ -33,8 +33,14 @@ isd_radius = zeros(size(cell_enu, 1));
 % load turkey_isd_radius;
 % isd_radius = turkey_isd_radius_all;
 
-load rogers_isd_radius;
-isd_radius = rogers_isd_radius_all;
+% rogers
+% load rogers_isd_radius;
+% isd_radius = rogers_isd_radius_all;
+
+% turkey
+load turkey_isd_radius;
+isd_radius = turkey_isd_radius_all;
+
 
 % for ii = 1 : size(cell_enu, 1)
 % %     cell_enu_angle_dist = [];

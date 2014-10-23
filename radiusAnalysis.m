@@ -65,5 +65,9 @@ pie_legend = x_lable ;
 pie_title = vertcat({'radius pie'}, subhead);
 drawPie(radius, nbins, pie_legend, pie_title);
 
+figure; % cdfplot
+cdfplot(radius);
+title(vertcat({'radius cdf'}, subhead));
+
 
 end

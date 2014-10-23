@@ -1,4 +1,4 @@
-function drawCellVoroGeo(lac_ci, cell_enu, cell_angle, cell_radius, vertexs, nbr_points, segs, t_cell_enu, t_cell_angle)
+function drawCellVoroGeo(lac_ci, cell_enu, cell_angle, cell_radius, v_radius, vertexs, nbr_points, segs, t_cell_enu, t_cell_angle)
 
 idx_lat = 1;
 idx_long = 2;
@@ -25,11 +25,32 @@ idx_s_mean = 6;
 idx_s_min = 7;
 idx_s_angle = 8;
 
-radius = cell_radius(idx_s_max);
+radius = v_radius(idx_s_max);
 [start_angle, stop_angle] = changeGeoAngle(start_angle, stop_angle);
 
+show_v = true;
+show_v_angle = false;
+show_s = false;
+show_s_angle = false;
 
-for step=1:4
+steps = [];
+if show_v
+    steps = [steps; 1]; 
+end
+
+if show_v_angle
+    steps = [steps; 2];
+end
+
+if show_s
+    steps = [steps; 3];
+end
+
+if show_s_angle
+    steps = [steps; 4];
+end
+
+for step=steps
     figure;
     hold on;
     
@@ -53,33 +74,40 @@ for step=1:4
     drawArc(p, radius, start_angle, stop_angle, 1);
 
     % draw circle
+    
+    [X, Y ] = drawCircle(p.x, p.y, cell_radius);
+    plot(X, Y, 'k--', 'LineWidth',2);
+        
     if step==1
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_v_max));
+        [X, Y ] = drawCircle(p.x, p.y, v_radius(idx_v_max));
         plot(X, Y, '--');
         
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_v_mean));
+        [X, Y ] = drawCircle(p.x, p.y, v_radius(idx_v_mean));
         plot(X, Y, 'g--');
         
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_v_min));
+        [X, Y ] = drawCircle(p.x, p.y, v_radius(idx_v_min));
         plot(X, Y, 'r--');
+        
+        
         
     elseif step==2
         
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_v_angle));
+        [X, Y ] = drawCircle(p.x, p.y, v_radius(idx_v_angle));
         plot(X, Y, 'c--');
         
+        
     elseif step==3
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_s_max));
+        [X, Y ] = drawCircle(p.x, p.y, v_radius(idx_s_max));
         plot(X, Y, '--');
         
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_s_mean));
+        [X, Y ] = drawCircle(p.x, p.y, v_radius(idx_s_mean));
         plot(X, Y, 'g--');
         
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_s_min));
+        [X, Y ] = drawCircle(p.x, p.y, v_radius(idx_s_min));
         plot(X, Y, 'r--');
         
     elseif step==4
-        [X, Y ] = drawCircle(p.x, p.y, cell_radius(idx_s_angle));
+        [X, Y ] = drawCircle(p.x, p.y, v_radius(idx_s_angle));
         plot(X, Y, 'c--');
     end
 
